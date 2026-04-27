@@ -53,6 +53,28 @@ export class ProjectsService {
     }));
   }
 
+  // Listar todos los proyectos (solo admin)
+  async findAllProjects(): Promise<any[]> {
+    const projects = await this.projectRepository.find({
+      relations: ['leader'],
+      order: { createdAt: 'DESC' },
+    });
+
+    return projects.map((project) => ({
+      id: project.id,
+      name: project.name,
+      description: project.description,
+      isPublic: project.isPublic,
+      wipLimit: project.wipLimit,
+      createdAt: project.createdAt,
+      createdBy: {
+        id: project.leader?.id,
+        name: project.leader?.name,
+        email: project.leader?.email,
+      },
+    }));
+  }
+
   // Ver un proyecto por ID
   async findOne(id: number, userId: number): Promise<Project> {
     const project = await this.projectRepository.findOne({

@@ -23,7 +23,7 @@ export class TasksService {
     private memberRepository: Repository<ProjectMember>,
     @InjectRepository(User)
     private userRepository: Repository<User>,
-  ) {}
+  ) { }
 
   // Crear tarea en un proyecto
   async create(projectId: number, createTaskDto: CreateTaskDto, userId: number): Promise<Task> {
@@ -54,6 +54,20 @@ export class TasksService {
 
     return this.taskRepository.find({
       where: { project: { id: projectId } },
+      relations: ['assignee', 'subtasks'],
+      order: { createdAt: 'ASC' },
+    });
+  }
+
+  // Ver tareas asignadas al usuario autenticado dentro de un proyecto
+  async findMyTasks(projectId: number, userId: number): Promise<Task[]> {
+    await this.checkViewerPermission(projectId, userId);
+
+    return this.taskRepository.find({
+      where: {
+        project: { id: projectId },
+        assignee: { id: userId },
+      },
       relations: ['assignee', 'subtasks'],
       order: { createdAt: 'ASC' },
     });
@@ -128,7 +142,7 @@ export class TasksService {
     return { message: `Tarea "${task.title}" eliminada correctamente` };
   }
 
-  // Asignar tarea a un usuario (solo LEADER)
+  // Asignar tarea a un usuario (solo LEADER, el asignado debe ser miembro del proyecto)
   async assignTask(id: number, assigneeId: number, userId: number): Promise<Task> {
     const task = await this.findOne(id, userId);
     await this.checkLeaderPermission(task.project.id, userId);
@@ -138,7 +152,32 @@ export class TasksService {
     });
     if (!assignee) throw new NotFoundException('Usuario no encontrado');
 
+    // Verificar que el asignado sea miembro del proyecto
+    const membership = await this.memberRepository.findOne({
+      where: { project: { id: task.project.id }, user: { id: assigneeId } },
+    });
+    if (!membership) {
+      throw new ForbiddenException('El usuario no es miembro de este proyecto y no puede ser asignado');
+    }
+
     task.assignee = assignee;
+    return this.taskRepository.save(task);
+  }
+
+  // Marcar tarea como desarrollada (solo el miembro asignado)
+  async developTask(id: number, userId: number): Promise<Task> {
+    const task = await this.findOne(id, userId);
+
+    // Verificar que el usuario sea el asignado a la tarea
+    if (!task.assignee || task.assignee.id !== userId) {
+      throw new ForbiddenException('Solo el miembro asignado a esta tarea puede marcarla como desarrollada');
+    }
+
+    if (task.status === TaskStatus.DONE) {
+      throw new BadRequestException('La tarea ya está marcada como completada');
+    }
+
+    task.status = TaskStatus.DONE;
     return this.taskRepository.save(task);
   }
 
@@ -152,7 +191,7 @@ export class TasksService {
     const query = this.taskRepository.createQueryBuilder('task')
       .leftJoinAndSelect('task.assignee', 'assignee')
       .leftJoinAndSelect('task.subtasks', 'subtasks')
-      .where('task.project_id = :projectId', { projectId });
+      .where('task.projectId = :projectId', { projectId }); // ← cambio aquí
 
     if (filters.status) {
       query.andWhere('task.status = :status', { status: filters.status });
@@ -167,15 +206,17 @@ export class TasksService {
 
   // ─── Helpers de permisos ─────────────────────────────────────
 
-  // Verifica que el usuario sea al menos VIEWER del proyecto
+  // Acceso de lectura: público → cualquier autenticado; privado → solo miembros (MEMBER o LEADER)
   private async checkViewerPermission(projectId: number, userId: number): Promise<void> {
     const project = await this.projectRepository.findOne({ where: { id: projectId } });
-    if (project?.isPublic) return; // proyecto público, cualquiera puede ver
+    if (!project) throw new NotFoundException('Proyecto no encontrado');
+
+    if (project.isPublic) return; // proyecto público, cualquier usuario autenticado puede ver
 
     const membership = await this.memberRepository.findOne({
       where: { project: { id: projectId }, user: { id: userId } },
     });
-    if (!membership) throw new ForbiddenException('No tienes acceso a este proyecto');
+    if (!membership) throw new ForbiddenException('Este proyecto es privado. Solo sus miembros pueden ver sus tareas');
   }
 
   // Verifica que el usuario sea MEMBER o LEADER
@@ -183,7 +224,7 @@ export class TasksService {
     const membership = await this.memberRepository.findOne({
       where: { project: { id: projectId }, user: { id: userId } },
     });
-    if (!membership || membership.role === ProjectRole.MEMBER) {
+    if (!membership) {
       throw new ForbiddenException('Necesitas ser miembro del proyecto para realizar esta acción');
     }
   }

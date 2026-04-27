@@ -4,6 +4,7 @@ import { TasksService } from './tasks.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { MoveTaskDto } from './dto/move-task.dto';
+import { AssignTaskDto } from './dto/assign-task.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ProjectRoleGuard } from '../auth/guards/project-role.guard';
 import { RequireProjectRole } from '../auth/decorators/project-role.decorator';
@@ -46,6 +47,15 @@ export class TasksController {
     return this.tasksService.findByProject(+projectId, req.user.id);
   }
 
+  // Ver mis tareas asignadas — solo el member autenticado
+  @Get('my-tasks')
+  @RequireProjectRole(ProjectRole.MEMBER, ProjectRole.LEADER)
+  @ApiOperation({ summary: 'Ver tareas asignadas al usuario autenticado en el proyecto' })
+  @ApiResponse({ status: 200, description: 'Lista de tareas asignadas al usuario' })
+  findMyTasks(@Param('projectId') projectId: string, @Req() req) {
+    return this.tasksService.findMyTasks(+projectId, req.user.id);
+  }
+
   // Ver tarea — member, leader
   @Get(':id')
   @RequireProjectRole(ProjectRole.MEMBER, ProjectRole.LEADER)
@@ -70,12 +80,24 @@ export class TasksController {
     return this.tasksService.moveTask(+id, moveTaskDto, req.user.id);
   }
 
+  // Marcar tarea como desarrollada — solo el miembro asignado
+  @Patch(':id/develop')
+  @RequireProjectRole(ProjectRole.MEMBER, ProjectRole.LEADER)
+  @ApiOperation({ summary: 'Marcar tarea como desarrollada (solo el miembro asignado)' })
+  @ApiResponse({ status: 200, description: 'Tarea marcada como completada' })
+  @ApiResponse({ status: 403, description: 'Solo el miembro asignado puede realizar esta acción' })
+  developTask(@Param('id') id: string, @Req() req) {
+    return this.tasksService.developTask(+id, req.user.id);
+  }
+
   // Asignar tarea — solo leader
   @Patch(':id/assign')
   @RequireProjectRole(ProjectRole.LEADER)
-  @ApiOperation({ summary: 'Asignar tarea (solo LEADER)' })
-  assignTask(@Param('id') id: string, @Body('assigneeId') assigneeId: number, @Req() req) {
-    return this.tasksService.assignTask(+id, assigneeId, req.user.id);
+  @ApiOperation({ summary: 'Asignar tarea (solo LEADER, el usuario debe ser miembro del proyecto)' })
+  @ApiResponse({ status: 200, description: 'Tarea asignada correctamente' })
+  @ApiResponse({ status: 403, description: 'El usuario no es miembro del proyecto' })
+  assignTask(@Param('projectId') projectId: string, @Param('id') id: string, @Body() assignTaskDto: AssignTaskDto, @Req() req) {
+    return this.tasksService.assignTask(+id, assignTaskDto.assigneeId, req.user.id);
   }
 
   // Eliminar tarea — solo leader

@@ -38,9 +38,15 @@ export class AuthService {
       password: hashedPassword,
       role,
     });
-    await this.userRepository.save(user);
+    const saved = await this.userRepository.save(user);
 
-    return this.generateToken(user);
+    // Recargar con la relación role para que el token tenga el nombre del rol
+    const userWithRole = await this.userRepository.findOne({
+      where: { id: saved.id },
+      relations: ['role'],
+    });
+
+    return this.generateToken(userWithRole);
   }
 
   async login(loginDto: LoginDto): Promise<{ access_token: string }> {

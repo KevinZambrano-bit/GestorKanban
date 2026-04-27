@@ -8,6 +8,8 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ProjectRoleGuard } from '../auth/guards/project-role.guard';
 import { RequireProjectRole } from '../auth/decorators/project-role.decorator';
 import { ProjectRole } from './entities/project-member.entity';
+import { GlobalRoleGuard } from '../auth/guards/global-role.guard';
+import { RequireGlobalRole } from '../auth/decorators/global-role.decorator';
 
 @ApiTags('Projects')
 @ApiBearerAuth('JWT-auth')
@@ -21,6 +23,17 @@ export class ProjectsController {
   @ApiOperation({ summary: 'Crear nuevo proyecto' })
   create(@Body() createProjectDto: CreateProjectDto, @Req() req) {
     return this.projectsService.create(createProjectDto, req.user.id);
+  }
+
+  // Ver todos los proyectos de la plataforma — solo admin
+  @Get('admin/all')
+  @UseGuards(GlobalRoleGuard)
+  @RequireGlobalRole('admin')
+  @ApiOperation({ summary: 'Ver todos los proyectos de la plataforma (solo ADMIN)' })
+  @ApiResponse({ status: 200, description: 'Lista de todos los proyectos con creador' })
+  @ApiResponse({ status: 403, description: 'No tienes permisos de administrador' })
+  findAllProjects() {
+    return this.projectsService.findAllProjects();
   }
 
   // Ver mis proyectos

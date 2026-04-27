@@ -3,15 +3,18 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagg
 import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { GlobalRoleGuard } from '../auth/guards/global-role.guard';
+import { RequireGlobalRole } from '../auth/decorators/global-role.decorator';
 
 @ApiTags('Users')
 @ApiBearerAuth('JWT-auth')
 @Controller('users')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, GlobalRoleGuard)
 export class UsersController {
   constructor(private usersService: UsersService) {}
 
   @Get()
+  @RequireGlobalRole('admin')
   @ApiOperation({ summary: 'Listar todos los usuarios' })
   @ApiResponse({ status: 200, description: 'Lista de usuarios' })
   findAll() {
@@ -26,6 +29,7 @@ export class UsersController {
   }
 
   @Get(':id')
+  @RequireGlobalRole('admin')
   @ApiOperation({ summary: 'Buscar usuario por ID' })
   @ApiResponse({ status: 200, description: 'Usuario encontrado' })
   @ApiResponse({ status: 404, description: 'Usuario no encontrado' })
@@ -34,6 +38,7 @@ export class UsersController {
   }
 
   @Patch(':id')
+  @RequireGlobalRole('admin')
   @ApiOperation({ summary: 'Actualizar datos del usuario' })
   @ApiResponse({ status: 200, description: 'Usuario actualizado' })
   update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
@@ -41,6 +46,7 @@ export class UsersController {
   }
 
   @Delete(':id')
+  @RequireGlobalRole('admin')
   @ApiOperation({ summary: 'Eliminar usuario' })
   @ApiResponse({ status: 200, description: 'Usuario eliminado' })
   remove(@Param('id') id: string) {
