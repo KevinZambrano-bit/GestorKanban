@@ -10,7 +10,6 @@ export class RolesService implements OnModuleInit {
     private roleRepository: Repository<Role>,
   ) {}
 
-  // Crea los roles automáticamente al iniciar el servidor
   async onModuleInit() {
     await this.seedRoles();
   }
@@ -19,42 +18,21 @@ export class RolesService implements OnModuleInit {
     const roles = [
       {
         name: 'admin',
-        description: 'Acceso total al sistema',
+        description: 'Administrador del sistema',
         permissions: [
           'manage_users',
-          'create_project', 'edit_project', 'delete_project',
-          'invite_members', 'configure_wip',
-          'create_task', 'edit_task', 'delete_task', 'move_task',
-          'view_project', 'view_task',
-          'use_focus_mode', 'generate_ai',
+          'manage_roles',
+          'manage_projects',
           'configure_ai_api',
+          'view_all_projects',
         ],
       },
       {
-        name: 'leader',
-        description: 'Lider de proyecto',
+        name: 'user',
+        description: 'Usuario registrado del sistema',
         permissions: [
-          'create_project', 'edit_project', 'delete_project',
-          'invite_members', 'configure_wip',
-          'create_task', 'edit_task', 'delete_task', 'move_task',
-          'view_project', 'view_task',
-          'use_focus_mode', 'generate_ai',
-        ],
-      },
-      {
-        name: 'member',
-        description: 'Miembro activo del equipo',
-        permissions: [
-          'create_task', 'edit_task', 'move_task',
-          'view_project', 'view_task',
-          'use_focus_mode', 'generate_ai',
-        ],
-      },
-      {
-        name: 'guest',
-        description: 'Solo lectura',
-        permissions: [
-          'view_project', 'view_task',
+          'create_project',
+          'view_own_projects',
         ],
       },
     ];
@@ -64,10 +42,12 @@ export class RolesService implements OnModuleInit {
         where: { name: roleData.name },
       });
       if (!exists) {
-        await this.roleRepository.save(this.roleRepository.create(roleData));
+        await this.roleRepository.save(
+          this.roleRepository.create(roleData)
+        );
       }
     }
-    console.log('✅ Roles inicializados correctamente');
+    console.log('✅ Roles globales inicializados');
   }
 
   async findAll(): Promise<Role[]> {

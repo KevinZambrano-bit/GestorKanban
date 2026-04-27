@@ -17,10 +17,13 @@ export class Project {
   @Column({ default: 3 })
   wipLimit: number;
 
+  @Column({ default: false })
+  isPublic: boolean;
+
   @CreateDateColumn()
   createdAt: Date;
 
-  @ManyToOne(() => User, (u) => u.projects)
+  @ManyToOne(() => User, (u) => u.projects, { eager: true })
   leader: User;
 
   @OneToMany(() => ProjectMember, (pm) => pm.project)

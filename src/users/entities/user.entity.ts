@@ -4,13 +4,6 @@ import { Task } from '../../tasks/entities/task.entity';
 import { ProjectMember } from '../../projects/entities/project-member.entity';
 import { Role } from '../../roles/entities/role.entity';
 
-export enum UserRole {
-  ADMIN = 'admin',
-  LEADER = 'leader',
-  MEMBER = 'member',
-  GUEST = 'guest',
-}
-
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn()
@@ -21,6 +14,9 @@ export class User {
 
   @Column({ unique: true })
   email: string;
+
+  @Column({ nullable: true })
+  password: string; // ← nullable porque los de Google no tienen contraseña
 
   @Column({ nullable: true })
   googleId: string;

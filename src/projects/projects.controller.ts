@@ -1,34 +1,77 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Param, Body, UseGuards, Req } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { ProjectsService } from './projects.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
+import { InviteMemberDto } from './dto/invite-member.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { ProjectRoleGuard } from '../auth/guards/project-role.guard';
+import { RequireProjectRole } from '../auth/decorators/project-role.decorator';
+import { ProjectRole } from './entities/project-member.entity';
 
+@ApiTags('Projects')
+@ApiBearerAuth('JWT-auth')
 @Controller('projects')
+@UseGuards(JwtAuthGuard)
 export class ProjectsController {
-  constructor(private readonly projectsService: ProjectsService) {}
+  constructor(private projectsService: ProjectsService) {}
 
+  // Cualquier usuario autenticado puede crear proyectos
   @Post()
-  create(@Body() createProjectDto: CreateProjectDto) {
-    return this.projectsService.create(createProjectDto);
+  @ApiOperation({ summary: 'Crear nuevo proyecto' })
+  create(@Body() createProjectDto: CreateProjectDto, @Req() req) {
+    return this.projectsService.create(createProjectDto, req.user.id);
   }
 
+  // Ver mis proyectos
   @Get()
-  findAll() {
-    return this.projectsService.findAll();
+  @ApiOperation({ summary: 'Listar mis proyectos' })
+  findMyProjects(@Req() req) {
+    return this.projectsService.findMyProjects(req.user.id);
   }
 
+  // Ver un proyecto — member o leader
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.projectsService.findOne(+id);
+  @UseGuards(ProjectRoleGuard)
+  @RequireProjectRole(ProjectRole.MEMBER, ProjectRole.LEADER)
+  @ApiOperation({ summary: 'Ver proyecto (member, leader)' })
+  findOne(@Param('id') id: string, @Req() req) {
+    return this.projectsService.findOne(+id, req.user.id);
   }
 
+  // Editar proyecto — solo leader
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateProjectDto: UpdateProjectDto) {
-    return this.projectsService.update(+id, updateProjectDto);
+  @UseGuards(ProjectRoleGuard)
+  @RequireProjectRole(ProjectRole.LEADER)
+  @ApiOperation({ summary: 'Editar proyecto (solo LEADER)' })
+  update(@Param('id') id: string, @Body() updateProjectDto: UpdateProjectDto, @Req() req) {
+    return this.projectsService.update(+id, updateProjectDto, req.user.id);
   }
 
+  // Eliminar proyecto — solo leader
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.projectsService.remove(+id);
+  @UseGuards(ProjectRoleGuard)
+  @RequireProjectRole(ProjectRole.LEADER)
+  @ApiOperation({ summary: 'Eliminar proyecto (solo LEADER)' })
+  remove(@Param('id') id: string, @Req() req) {
+    return this.projectsService.remove(+id, req.user.id);
+  }
+
+  // Invitar miembro — solo leader
+  @Post(':id/members')
+  @UseGuards(ProjectRoleGuard)
+  @RequireProjectRole(ProjectRole.LEADER)
+  @ApiOperation({ summary: 'Invitar miembro (solo LEADER)' })
+  inviteMember(@Param('id') id: string, @Body() inviteMemberDto: InviteMemberDto, @Req() req) {
+    return this.projectsService.inviteMember(+id, inviteMemberDto, req.user.id);
+  }
+
+  // Configurar WIP — solo leader
+  @Patch(':id/wip')
+  @UseGuards(ProjectRoleGuard)
+  @RequireProjectRole(ProjectRole.LEADER)
+  @ApiOperation({ summary: 'Configurar límite WIP (solo LEADER)' })
+  updateWip(@Param('id') id: string, @Body('wipLimit') wipLimit: number, @Req() req) {
+    return this.projectsService.updateWipLimit(+id, wipLimit, req.user.id);
   }
 }
