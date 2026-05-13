@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { Project } from './entities/project.entity';
 import { ProjectMember, ProjectRole } from './entities/project-member.entity';
 import { User } from '../users/entities/user.entity';
+import { Task } from '../tasks/entities/task.entity';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { InviteMemberDto } from './dto/invite-member.dto';
@@ -17,6 +18,8 @@ export class ProjectsService {
     private memberRepository: Repository<ProjectMember>,
     @InjectRepository(User)
     private userRepository: Repository<User>,
+    @InjectRepository(Task)
+    private taskRepository: Repository<Task>,
   ) { }
 
   // Crear proyecto → el creador queda como LEADER
@@ -145,6 +148,60 @@ export class ProjectsService {
     const project = await this.projectRepository.findOne({ where: { id } });
     project.wipLimit = wipLimit;
     return this.projectRepository.save(project);
+  }
+
+  // Obtener miembros de un proyecto (member, leader)
+  async getProjectMembers(id: number, userId: number): Promise<any[]> {
+    const project = await this.findOne(id, userId);
+
+    const members = await this.memberRepository.find({
+      where: { project: { id } },
+      relations: ['user'],
+      order: { joinedAt: 'ASC' },
+    });
+
+    return members.map((m) => ({
+      id: m.user.id,
+      name: m.user.name,
+      email: m.user.email,
+      role: m.role,
+      joinedAt: m.joinedAt,
+    }));
+  }
+
+  // Eliminar miembro del proyecto (solo LEADER)
+  async removeMember(id: number, memberId: number, userId: number): Promise<{ message: string }> {
+    await this.checkLeaderPermission(id, userId);
+
+    // Verificar que no se esté eliminando a sí mismo
+    if (memberId === userId) {
+      throw new ForbiddenException('No puedes eliminarte a ti mismo del proyecto');
+    }
+
+    // Verificar que el miembro existe en el proyecto
+    const membership = await this.memberRepository.findOne({
+      where: { project: { id }, user: { id: memberId } },
+      relations: ['user'],
+    });
+    if (!membership) {
+      throw new NotFoundException('El usuario no es miembro de este proyecto');
+    }
+
+    // Verificar que no se esté eliminando al líder
+    if (membership.role === ProjectRole.LEADER) {
+      throw new ForbiddenException('No puedes eliminar al líder del proyecto');
+    }
+
+    // Desasignar todas las tareas del miembro eliminado
+    await this.taskRepository.update(
+      { project: { id }, assignee: { id: memberId } },
+      { assignee: null }
+    );
+
+    // Eliminar la membresía
+    await this.memberRepository.remove(membership);
+
+    return { message: `${membership.user.name} ha sido eliminado del proyecto y sus tareas han sido desasignadas` };
   }
 
   // Helper → verifica que el usuario sea LEADER del proyecto

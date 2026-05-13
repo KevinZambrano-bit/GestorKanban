@@ -32,15 +32,41 @@ export class TasksService {
     const project = await this.projectRepository.findOne({ where: { id: projectId } });
     if (!project) throw new NotFoundException('Proyecto no encontrado');
 
+    // Calcular el siguiente taskNumber para este proyecto
+    const lastTask = await this.taskRepository.findOne({
+      where: { project: { id: projectId } },
+      order: { taskNumber: 'DESC' },
+    });
+    const nextTaskNumber = lastTask ? lastTask.taskNumber + 1 : 1;
+
     let assignee = null;
     if (createTaskDto.assigneeId) {
+      // Verificar que el usuario sea miembro del proyecto
+      const isMember = await this.memberRepository.findOne({
+        where: {
+          project: { id: projectId },
+          user: { id: createTaskDto.assigneeId },
+        },
+      });
+      if (!isMember) {
+        throw new BadRequestException('Este usuario aun no es miembro del proyecto');
+      }
+
       assignee = await this.userRepository.findOne({
         where: { id: createTaskDto.assigneeId },
       });
+      if (!assignee) {
+        throw new NotFoundException(`Usuario con ID ${createTaskDto.assigneeId} no encontrado`);
+      }
     }
 
     const task = this.taskRepository.create({
-      ...createTaskDto,
+      title: createTaskDto.title,
+      description: createTaskDto.description || null,
+      status: createTaskDto.status || TaskStatus.PENDING,
+      startDate: createTaskDto.startDate || null,
+      endDate: createTaskDto.endDate || null,
+      taskNumber: nextTaskNumber,
       project,
       assignee,
     });
@@ -74,23 +100,34 @@ export class TasksService {
   }
 
   // Ver una tarea por ID
-  async findOne(id: number, userId: number): Promise<Task> {
+  async findOne(taskNumber: number, projectId: number, userId: number): Promise<Task> {
     const task = await this.taskRepository.findOne({
-      where: { id },
+      where: { taskNumber, project: { id: projectId } },
       relations: ['project', 'assignee', 'subtasks'],
     });
-    if (!task) throw new NotFoundException(`Tarea con ID ${id} no encontrada`);
+    if (!task) throw new NotFoundException(`Tarea #${taskNumber} no encontrada en este proyecto`);
 
     await this.checkViewerPermission(task.project.id, userId);
     return task;
   }
 
-  // Editar tarea
-  async update(id: number, updateTaskDto: UpdateTaskDto, userId: number): Promise<Task> {
-    const task = await this.findOne(id, userId);
+  // Editar tarea por taskNumber
+  async update(taskNumber: number, projectId: number, updateTaskDto: UpdateTaskDto, userId: number): Promise<Task> {
+    const task = await this.findOne(taskNumber, projectId, userId);
     await this.checkMemberPermission(task.project.id, userId);
 
     if (updateTaskDto.assigneeId) {
+      // Verificar que el usuario sea miembro del proyecto
+      const isMember = await this.memberRepository.findOne({
+        where: {
+          project: { id: projectId },
+          user: { id: updateTaskDto.assigneeId },
+        },
+      });
+      if (!isMember) {
+        throw new BadRequestException('Este usuario aun no es miembro del proyecto');
+      }
+
       const assignee = await this.userRepository.findOne({
         where: { id: updateTaskDto.assigneeId },
       });
@@ -105,20 +142,20 @@ export class TasksService {
     return this.taskRepository.save(task);
   }
 
-  // Mover tarea entre columnas (con validación WIP)
-  async moveTask(id: number, moveTaskDto: MoveTaskDto, userId: number): Promise<Task> {
-    const task = await this.findOne(id, userId);
+
+  // Mover tarea por taskNumber
+  async moveTask(taskNumber: number, projectId: number, moveTaskDto: MoveTaskDto, userId: number): Promise<Task> {
+    const task = await this.findOne(taskNumber, projectId, userId);
     await this.checkMemberPermission(task.project.id, userId);
 
-    // Validación WIP - RF015 y RF016
     if (moveTaskDto.status === TaskStatus.IN_PROGRESS) {
       const project = await this.projectRepository.findOne({
-        where: { id: task.project.id },
+        where: { id: projectId },
       });
 
       const inProgressCount = await this.taskRepository.count({
         where: {
-          project: { id: task.project.id },
+          project: { id: projectId },
           status: TaskStatus.IN_PROGRESS,
         },
       });
@@ -134,47 +171,24 @@ export class TasksService {
     return this.taskRepository.save(task);
   }
 
-  // Eliminar tarea (solo LEADER)
-  async remove(id: number, userId: number): Promise<{ message: string }> {
-    const task = await this.findOne(id, userId);
+  // Eliminar tarea por taskNumber
+  async remove(taskNumber: number, projectId: number, userId: number): Promise<{ message: string }> {
+    const task = await this.findOne(taskNumber, projectId, userId);
     await this.checkLeaderPermission(task.project.id, userId);
     await this.taskRepository.remove(task);
-    return { message: `Tarea "${task.title}" eliminada correctamente` };
+    return { message: `Tarea #${taskNumber} eliminada correctamente` };
   }
 
-  // Asignar tarea a un usuario (solo LEADER, el asignado debe ser miembro del proyecto)
-  async assignTask(id: number, assigneeId: number, userId: number): Promise<Task> {
-    const task = await this.findOne(id, userId);
-    await this.checkLeaderPermission(task.project.id, userId);
+  // Marcar como desarrollada por taskNumber
+  async developTask(taskNumber: number, projectId: number, userId: number): Promise<Task> {
+    const task = await this.findOne(taskNumber, projectId, userId);
 
-    const assignee = await this.userRepository.findOne({
-      where: { id: assigneeId },
-    });
-    if (!assignee) throw new NotFoundException('Usuario no encontrado');
-
-    // Verificar que el asignado sea miembro del proyecto
-    const membership = await this.memberRepository.findOne({
-      where: { project: { id: task.project.id }, user: { id: assigneeId } },
-    });
-    if (!membership) {
-      throw new ForbiddenException('El usuario no es miembro de este proyecto y no puede ser asignado');
-    }
-
-    task.assignee = assignee;
-    return this.taskRepository.save(task);
-  }
-
-  // Marcar tarea como desarrollada (solo el miembro asignado)
-  async developTask(id: number, userId: number): Promise<Task> {
-    const task = await this.findOne(id, userId);
-
-    // Verificar que el usuario sea el asignado a la tarea
     if (!task.assignee || task.assignee.id !== userId) {
-      throw new ForbiddenException('Solo el miembro asignado a esta tarea puede marcarla como desarrollada');
+      throw new ForbiddenException('Solo el miembro asignado puede marcar esta tarea como desarrollada');
     }
 
     if (task.status === TaskStatus.DONE) {
-      throw new BadRequestException('La tarea ya está marcada como completada');
+      throw new BadRequestException('La tarea ya está completada');
     }
 
     task.status = TaskStatus.DONE;

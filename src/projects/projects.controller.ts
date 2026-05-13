@@ -18,14 +18,13 @@ import { RequireGlobalRole } from '../auth/decorators/global-role.decorator';
 export class ProjectsController {
   constructor(private projectsService: ProjectsService) {}
 
-  // Cualquier usuario autenticado puede crear proyectos
+  
   @Post()
   @ApiOperation({ summary: 'Crear nuevo proyecto' })
   create(@Body() createProjectDto: CreateProjectDto, @Req() req) {
     return this.projectsService.create(createProjectDto, req.user.id);
   }
 
-  // Ver todos los proyectos de la plataforma — solo admin
   @Get('admin/all')
   @UseGuards(GlobalRoleGuard)
   @RequireGlobalRole('admin')
@@ -36,14 +35,14 @@ export class ProjectsController {
     return this.projectsService.findAllProjects();
   }
 
-  // Ver mis proyectos
+
   @Get()
   @ApiOperation({ summary: 'Listar mis proyectos' })
   findMyProjects(@Req() req) {
     return this.projectsService.findMyProjects(req.user.id);
   }
 
-  // Ver un proyecto — member o leader
+ 
   @Get(':id')
   @UseGuards(ProjectRoleGuard)
   @RequireProjectRole(ProjectRole.MEMBER, ProjectRole.LEADER)
@@ -52,7 +51,7 @@ export class ProjectsController {
     return this.projectsService.findOne(+id, req.user.id);
   }
 
-  // Editar proyecto — solo leader
+ 
   @Patch(':id')
   @UseGuards(ProjectRoleGuard)
   @RequireProjectRole(ProjectRole.LEADER)
@@ -61,7 +60,6 @@ export class ProjectsController {
     return this.projectsService.update(+id, updateProjectDto, req.user.id);
   }
 
-  // Eliminar proyecto — solo leader
   @Delete(':id')
   @UseGuards(ProjectRoleGuard)
   @RequireProjectRole(ProjectRole.LEADER)
@@ -70,7 +68,6 @@ export class ProjectsController {
     return this.projectsService.remove(+id, req.user.id);
   }
 
-  // Invitar miembro — solo leader
   @Post(':id/members')
   @UseGuards(ProjectRoleGuard)
   @RequireProjectRole(ProjectRole.LEADER)
@@ -79,7 +76,23 @@ export class ProjectsController {
     return this.projectsService.inviteMember(+id, inviteMemberDto, req.user.id);
   }
 
-  // Configurar WIP — solo leader
+  @Get(':id/members')
+  @UseGuards(ProjectRoleGuard)
+  @RequireProjectRole(ProjectRole.MEMBER, ProjectRole.LEADER)
+  @ApiOperation({ summary: 'Obtener miembros del proyecto (member, leader)' })
+  getProjectMembers(@Param('id') id: string, @Req() req) {
+    return this.projectsService.getProjectMembers(+id, req.user.id);
+  }
+
+  @Delete(':id/members/:memberId')
+  @UseGuards(ProjectRoleGuard)
+  @RequireProjectRole(ProjectRole.LEADER)
+  @ApiOperation({ summary: 'Eliminar miembro del proyecto (solo LEADER)' })
+  removeMember(@Param('id') id: string, @Param('memberId') memberId: string, @Req() req) {
+    return this.projectsService.removeMember(+id, +memberId, req.user.id);
+  }
+
+  
   @Patch(':id/wip')
   @UseGuards(ProjectRoleGuard)
   @RequireProjectRole(ProjectRole.LEADER)

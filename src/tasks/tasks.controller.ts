@@ -4,7 +4,6 @@ import { TasksService } from './tasks.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { MoveTaskDto } from './dto/move-task.dto';
-import { AssignTaskDto } from './dto/assign-task.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ProjectRoleGuard } from '../auth/guards/project-role.guard';
 import { RequireProjectRole } from '../auth/decorators/project-role.decorator';
@@ -16,95 +15,98 @@ import { TaskStatus } from './entities/task.entity';
 @Controller('projects/:projectId/tasks')
 @UseGuards(JwtAuthGuard, ProjectRoleGuard)
 export class TasksController {
-  constructor(private tasksService: TasksService) {}
+  constructor(private tasksService: TasksService) { }
 
-  // Crear tarea — member y leader
+  // POST /api/projects/:projectId/tasks
   @Post()
   @RequireProjectRole(ProjectRole.MEMBER, ProjectRole.LEADER)
   @ApiOperation({ summary: 'Crear tarea (member, leader)' })
-  create(@Param('projectId') projectId: string, @Body() createTaskDto: CreateTaskDto, @Req() req) {
+  create(
+    @Param('projectId') projectId: string,
+    @Body() createTaskDto: CreateTaskDto,
+    @Req() req,
+  ) {
     return this.tasksService.create(+projectId, createTaskDto, req.user.id);
   }
 
-  // Listar tareas — member, leader
+  // GET /api/projects/:projectId/tasks
   @Get()
   @RequireProjectRole(ProjectRole.MEMBER, ProjectRole.LEADER)
   @ApiOperation({ summary: 'Listar tareas del proyecto' })
-  @ApiQuery({ name: 'status', enum: TaskStatus, required: false })
-  @ApiQuery({ name: 'assigneeId', required: false })
   findAll(
     @Param('projectId') projectId: string,
     @Req() req,
-    @Query('status') status?: TaskStatus,
-    @Query('assigneeId') assigneeId?: string,
   ) {
-    if (status || assigneeId) {
-      return this.tasksService.filterTasks(+projectId, req.user.id, {
-        status,
-        assigneeId: assigneeId ? +assigneeId : undefined,
-      });
-    }
     return this.tasksService.findByProject(+projectId, req.user.id);
   }
 
-  // Ver mis tareas asignadas — solo el member autenticado
+  // GET /api/projects/:projectId/tasks/my-tasks
   @Get('my-tasks')
   @RequireProjectRole(ProjectRole.MEMBER, ProjectRole.LEADER)
   @ApiOperation({ summary: 'Ver tareas asignadas al usuario autenticado en el proyecto' })
-  @ApiResponse({ status: 200, description: 'Lista de tareas asignadas al usuario' })
   findMyTasks(@Param('projectId') projectId: string, @Req() req) {
     return this.tasksService.findMyTasks(+projectId, req.user.id);
   }
 
-  // Ver tarea — member, leader
-  @Get(':id')
+  // GET /api/projects/:projectId/tasks/:taskNumber
+  @Get(':taskNumber')
   @RequireProjectRole(ProjectRole.MEMBER, ProjectRole.LEADER)
-  @ApiOperation({ summary: 'Ver tarea por ID' })
-  findOne(@Param('id') id: string, @Req() req) {
-    return this.tasksService.findOne(+id, req.user.id);
+  @ApiOperation({ summary: 'Ver tarea por número dentro del proyecto' })
+  findOne(
+    @Param('taskNumber') taskNumber: string,
+    @Param('projectId') projectId: string,
+    @Req() req,
+  ) {
+    return this.tasksService.findOne(+taskNumber, +projectId, req.user.id);
   }
 
-  // Editar tarea — member 
-  @Patch(':id')
-  @RequireProjectRole(ProjectRole.MEMBER)
+  // PATCH /api/projects/:projectId/tasks/:taskNumber
+  @Patch(':taskNumber')
+  @RequireProjectRole(ProjectRole.MEMBER, ProjectRole.LEADER)
   @ApiOperation({ summary: 'Editar tarea (member)' })
-  update(@Param('id') id: string, @Body() updateTaskDto: UpdateTaskDto, @Req() req) {
-    return this.tasksService.update(+id, updateTaskDto, req.user.id);
+  update(
+    @Param('taskNumber') taskNumber: string,
+    @Param('projectId') projectId: string,
+    @Body() updateTaskDto: UpdateTaskDto,
+    @Req() req,
+  ) {
+    return this.tasksService.update(+taskNumber, +projectId, updateTaskDto, req.user.id);
   }
 
-  // Mover tarea — member y leader
-  @Patch(':id/move')
-  @RequireProjectRole(ProjectRole.MEMBER, ProjectRole.LEADER)
-  @ApiOperation({ summary: 'Mover tarea entre columnas (valida WIP)' })
-  moveTask(@Param('id') id: string, @Body() moveTaskDto: MoveTaskDto, @Req() req) {
-    return this.tasksService.moveTask(+id, moveTaskDto, req.user.id);
-  }
-
-  // Marcar tarea como desarrollada — solo el miembro asignado
-  @Patch(':id/develop')
-  @RequireProjectRole(ProjectRole.MEMBER, ProjectRole.LEADER)
-  @ApiOperation({ summary: 'Marcar tarea como desarrollada (solo el miembro asignado)' })
-  @ApiResponse({ status: 200, description: 'Tarea marcada como completada' })
-  @ApiResponse({ status: 403, description: 'Solo el miembro asignado puede realizar esta acción' })
-  developTask(@Param('id') id: string, @Req() req) {
-    return this.tasksService.developTask(+id, req.user.id);
-  }
-
-  // Asignar tarea — solo leader
-  @Patch(':id/assign')
-  @RequireProjectRole(ProjectRole.LEADER)
-  @ApiOperation({ summary: 'Asignar tarea (solo LEADER, el usuario debe ser miembro del proyecto)' })
-  @ApiResponse({ status: 200, description: 'Tarea asignada correctamente' })
-  @ApiResponse({ status: 403, description: 'El usuario no es miembro del proyecto' })
-  assignTask(@Param('projectId') projectId: string, @Param('id') id: string, @Body() assignTaskDto: AssignTaskDto, @Req() req) {
-    return this.tasksService.assignTask(+id, assignTaskDto.assigneeId, req.user.id);
-  }
-
-  // Eliminar tarea — solo leader
-  @Delete(':id')
+  // DELETE /api/projects/:projectId/tasks/:taskNumber
+  @Delete(':taskNumber')
   @RequireProjectRole(ProjectRole.LEADER)
   @ApiOperation({ summary: 'Eliminar tarea (solo LEADER)' })
-  remove(@Param('id') id: string, @Req() req) {
-    return this.tasksService.remove(+id, req.user.id);
+  remove(
+    @Param('taskNumber') taskNumber: string,
+    @Param('projectId') projectId: string,
+    @Req() req,
+  ) {
+    return this.tasksService.remove(+taskNumber, +projectId, req.user.id);
+  }
+
+  // PATCH /api/projects/:projectId/tasks/:taskNumber/move
+  @Patch(':taskNumber/move')
+  @RequireProjectRole(ProjectRole.MEMBER, ProjectRole.LEADER)
+  @ApiOperation({ summary: 'Mover tarea entre columnas (valida WIP)' })
+  moveTask(
+    @Param('taskNumber') taskNumber: string,
+    @Param('projectId') projectId: string,
+    @Body() moveTaskDto: MoveTaskDto,
+    @Req() req,
+  ) {
+    return this.tasksService.moveTask(+taskNumber, +projectId, moveTaskDto, req.user.id);
+  }
+
+  // PATCH /api/projects/:projectId/tasks/:taskNumber/develop
+  @Patch(':taskNumber/develop')
+  @RequireProjectRole(ProjectRole.MEMBER, ProjectRole.LEADER)
+  @ApiOperation({ summary: 'Marcar tarea como desarrollada (solo el miembro asignado)' })
+  developTask(
+    @Param('taskNumber') taskNumber: string,
+    @Param('projectId') projectId: string,
+    @Req() req,
+  ) {
+    return this.tasksService.developTask(+taskNumber, +projectId, req.user.id);
   }
 }

@@ -46,8 +46,7 @@ export class RolesService implements OnModuleInit {
           this.roleRepository.create(roleData)
         );
       }
-    }
-    console.log('✅ Roles globales inicializados');
+    } 
   }
 
   async findAll(): Promise<Role[]> {

@@ -14,6 +14,9 @@ export class Task {
   @PrimaryGeneratedColumn()
   id: number;
 
+  @Column({ default: 1 })
+  taskNumber: number; // ← número secuencial dentro del proyecto
+
   @Column()
   title: string;
 
