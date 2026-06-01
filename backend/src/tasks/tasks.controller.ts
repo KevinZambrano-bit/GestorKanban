@@ -98,6 +98,30 @@ export class TasksController {
     return this.tasksService.moveTask(+taskNumber, +projectId, moveTaskDto, req.user.id);
   }
 
+  // GET /api/projects/:projectId/tasks/:taskNumber/subtasks
+  @Get(':taskNumber/subtasks')
+  @RequireProjectRole(ProjectRole.MEMBER, ProjectRole.LEADER)
+  @ApiOperation({ summary: 'Obtener subtareas de una tarea (member, leader)' })
+  findSubtasks(
+    @Param('taskNumber') taskNumber: string,
+    @Param('projectId') projectId: string,
+    @Req() req,
+  ) {
+    return this.tasksService.findSubtasks(+taskNumber, +projectId, req.user.id);
+  }
+
+  // POST /api/projects/:projectId/tasks/:taskNumber/generate-subtasks
+  @Post(':taskNumber/generate-subtasks')
+  @RequireProjectRole(ProjectRole.MEMBER, ProjectRole.LEADER)
+  @ApiOperation({ summary: 'Generar subtareas con IA (member, leader)' })
+  generateSubtasks(
+    @Param('taskNumber') taskNumber: string,
+    @Param('projectId') projectId: string,
+    @Req() req,
+  ) {
+    return this.tasksService.generateSubtasks(+taskNumber, +projectId, req.user.id);
+  }
+
   // PATCH /api/projects/:projectId/tasks/:taskNumber/develop
   @Patch(':taskNumber/develop')
   @RequireProjectRole(ProjectRole.MEMBER, ProjectRole.LEADER)

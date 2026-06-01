@@ -2,6 +2,10 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ProjectsController } from './projects.controller';
 import { ProjectsService } from './projects.service';
 import { ProjectRole } from './entities/project-member.entity';
+import { getRepositoryToken } from '@nestjs/typeorm';
+import { User } from '../users/entities/user.entity';
+import { ProjectMember } from './entities/project-member.entity';
+import { Project } from './entities/project.entity';
 
 describe('ProjectsController', () => {
   let controller: ProjectsController;
@@ -24,6 +28,24 @@ describe('ProjectsController', () => {
             getProjectMembers: jest.fn(),
             removeMember: jest.fn(),
             updateWipLimit: jest.fn(),
+          },
+        },
+        {
+          provide: getRepositoryToken(User),
+          useValue: {
+            findOne: jest.fn(),
+          },
+        },
+        {
+          provide: getRepositoryToken(ProjectMember),
+          useValue: {
+            findOne: jest.fn(),
+          },
+        },
+        {
+          provide: getRepositoryToken(Project),
+          useValue: {
+            findOne: jest.fn(),
           },
         },
       ],

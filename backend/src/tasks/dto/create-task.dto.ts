@@ -1,10 +1,11 @@
-import { IsString, IsOptional, IsNumber, IsDateString, IsEnum } from 'class-validator';
+import { IsString, IsOptional, IsNumber, IsDateString, IsEnum,  IsNotEmpty} from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { TaskStatus } from '../entities/task.entity';
 
 export class CreateTaskDto {
   @ApiProperty({ example: 'Implementar login con Google' })
   @IsString()
+  @IsNotEmpty()
   title: string;
 
   @ApiPropertyOptional({ example: 'Usar OAuth2 con Passport.js' })
