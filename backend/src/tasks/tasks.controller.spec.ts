@@ -2,6 +2,9 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { TasksController } from './tasks.controller';
 import { TasksService } from './tasks.service';
 import { TaskStatus } from './entities/task.entity';
+import { getRepositoryToken } from '@nestjs/typeorm';
+import { ProjectMember } from '../projects/entities/project-member.entity';
+import { Project } from '../projects/entities/project.entity';
 
 describe('TasksController', () => {
   let controller: TasksController;
@@ -22,6 +25,18 @@ describe('TasksController', () => {
             remove: jest.fn(),
             moveTask: jest.fn(),
             findMyTasks: jest.fn(),
+          },
+        },
+        {
+          provide: getRepositoryToken(ProjectMember),
+          useValue: {
+            findOne: jest.fn(),
+          },
+        },
+        {
+          provide: getRepositoryToken(Project),
+          useValue: {
+            findOne: jest.fn(),
           },
         },
       ],

@@ -6,6 +6,7 @@ import { UsersModule } from './users/users.module';
 import { RolesModule } from './roles/roles.module';
 import { ProjectsModule } from './projects/projects.module';
 import { TasksModule } from './tasks/tasks.module';
+import { AiClientModule } from './ai-client/ai-client.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { TasksModule } from './tasks/tasks.module';
     RolesModule,
     ProjectsModule,
     TasksModule,
+    AiClientModule,
   ],
 })
 export class AppModule {}

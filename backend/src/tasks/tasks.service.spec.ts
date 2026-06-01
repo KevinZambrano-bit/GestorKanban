@@ -143,7 +143,7 @@ describe('TasksService', () => {
 
       await expect(
         service.create(projectId, createTaskDto, userId),
-      ).rejects.toThrow(BadRequestException);
+      ).rejects.toThrow(ForbiddenException);
     });
   });
 
@@ -231,6 +231,7 @@ describe('TasksService', () => {
 
       taskRepository.findOne.mockResolvedValue(task as any);
       memberRepository.findOne.mockResolvedValue({ id: 1 } as any);
+      projectRepository.findOne.mockResolvedValue({ id: 1, isPublic: true } as any);
 
       const result = await service.findOne(taskNumber, projectId, userId);
 

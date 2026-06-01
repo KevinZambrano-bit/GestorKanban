@@ -9,6 +9,7 @@ import { User } from '../users/entities/user.entity';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { MoveTaskDto } from './dto/move-task.dto';
+import { AiClientService } from '../ai-client/ai-client.service';
 
 @Injectable()
 export class TasksService {
@@ -23,6 +24,7 @@ export class TasksService {
     private memberRepository: Repository<ProjectMember>,
     @InjectRepository(User)
     private userRepository: Repository<User>,
+    private aiClient: AiClientService,
   ) { }
 
   // Crear tarea en un proyecto
@@ -216,6 +218,29 @@ export class TasksService {
     }
 
     return query.getMany();
+  }
+
+  // Obtener subtareas de una tarea
+  async findSubtasks(taskNumber: number, projectId: number, userId: number): Promise<Subtask[]> {
+    const task = await this.findOne(taskNumber, projectId, userId);
+    return this.subtaskRepository.find({
+      where: { task: { id: task.id } },
+      order: { id: 'ASC' },
+    });
+  }
+
+  // Generar subtareas con IA
+  async generateSubtasks(taskNumber: number, projectId: number, userId: number): Promise<Subtask[]> {
+    const task = await this.findOne(taskNumber, projectId, userId);
+    await this.checkMemberPermission(task.project.id, userId);
+
+    const subtaskTitles = await this.aiClient.generateSubtasks(task.title);
+
+    const subtasks = subtaskTitles.map((title) =>
+      this.subtaskRepository.create({ title, task }),
+    );
+
+    return this.subtaskRepository.save(subtasks);
   }
 
   // ─── Helpers de permisos ─────────────────────────────────────
