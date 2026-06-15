@@ -1,4 +1,8 @@
-import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  ConflictException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -15,7 +19,7 @@ export class AuthService {
     private userRepository: Repository<User>,
     private jwtService: JwtService,
     private rolesService: RolesService,
-  ) { }
+  ) {}
 
   // ─── Login Normal ───────────────────────────────────────────
 
@@ -59,7 +63,8 @@ export class AuthService {
     if (!user) throw new UnauthorizedException('Credenciales incorrectas');
 
     // Verificar que tenga contraseña (no es usuario de Google)
-    if (!user.password) throw new UnauthorizedException('Esta cuenta usa login con Google');
+    if (!user.password)
+      throw new UnauthorizedException('Esta cuenta usa login con Google');
 
     // Verificar la contraseña
     const isMatch = await bcrypt.compare(loginDto.password, user.password);

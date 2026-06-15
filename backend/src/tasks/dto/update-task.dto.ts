@@ -1,4 +1,10 @@
-import { IsString, IsOptional, IsNumber, IsDateString, IsEnum } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsNumber,
+  IsDateString,
+  IsEnum,
+} from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { TaskStatus } from '../entities/task.entity';
 

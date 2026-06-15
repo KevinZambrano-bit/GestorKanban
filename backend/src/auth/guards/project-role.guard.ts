@@ -1,8 +1,16 @@
-import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  ForbiddenException,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { ProjectMember, ProjectRole } from '../../projects/entities/project-member.entity';
+import {
+  ProjectMember,
+  ProjectRole,
+} from '../../projects/entities/project-member.entity';
 import { Project } from '../../projects/entities/project.entity';
 import { PROJECT_ROLE_KEY } from '../decorators/project-role.decorator';
 
@@ -14,7 +22,7 @@ export class ProjectRoleGuard implements CanActivate {
     private memberRepository: Repository<ProjectMember>,
     @InjectRepository(Project)
     private projectRepository: Repository<Project>,
-  ) { }
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const requiredRoles = this.reflector.getAllAndOverride<ProjectRole[]>(
@@ -49,13 +57,14 @@ export class ProjectRoleGuard implements CanActivate {
       },
     });
 
-    if (!membership) throw new ForbiddenException('No eres miembro de este proyecto');
+    if (!membership)
+      throw new ForbiddenException('No eres miembro de este proyecto');
 
     // Verificar si el rol del usuario está en los roles requeridos
     const hasRole = requiredRoles.includes(membership.role);
     if (!hasRole) {
       throw new ForbiddenException(
-        `Necesitas ser ${requiredRoles.join(' o ')} para realizar esta acción`
+        `Necesitas ser ${requiredRoles.join(' o ')} para realizar esta acción`,
       );
     }
 

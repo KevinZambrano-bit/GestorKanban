@@ -1,10 +1,18 @@
-import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Task, TaskStatus } from './entities/task.entity';
 import { Subtask } from './entities/subtask.entity';
 import { Project } from '../projects/entities/project.entity';
-import { ProjectMember, ProjectRole } from '../projects/entities/project-member.entity';
+import {
+  ProjectMember,
+  ProjectRole,
+} from '../projects/entities/project-member.entity';
 import { User } from '../users/entities/user.entity';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
@@ -25,13 +33,19 @@ export class TasksService {
     @InjectRepository(User)
     private userRepository: Repository<User>,
     private aiClient: AiClientService,
-  ) { }
+  ) {}
 
   // Crear tarea en un proyecto
-  async create(projectId: number, createTaskDto: CreateTaskDto, userId: number): Promise<Task> {
+  async create(
+    projectId: number,
+    createTaskDto: CreateTaskDto,
+    userId: number,
+  ): Promise<Task> {
     await this.checkMemberPermission(projectId, userId);
 
-    const project = await this.projectRepository.findOne({ where: { id: projectId } });
+    const project = await this.projectRepository.findOne({
+      where: { id: projectId },
+    });
     if (!project) throw new NotFoundException('Proyecto no encontrado');
 
     // Calcular el siguiente taskNumber para este proyecto
@@ -51,14 +65,18 @@ export class TasksService {
         },
       });
       if (!isMember) {
-        throw new BadRequestException('Este usuario aun no es miembro del proyecto');
+        throw new BadRequestException(
+          'Este usuario aun no es miembro del proyecto',
+        );
       }
 
       assignee = await this.userRepository.findOne({
         where: { id: createTaskDto.assigneeId },
       });
       if (!assignee) {
-        throw new NotFoundException(`Usuario con ID ${createTaskDto.assigneeId} no encontrado`);
+        throw new NotFoundException(
+          `Usuario con ID ${createTaskDto.assigneeId} no encontrado`,
+        );
       }
     }
 
@@ -102,19 +120,31 @@ export class TasksService {
   }
 
   // Ver una tarea por ID
-  async findOne(taskNumber: number, projectId: number, userId: number): Promise<Task> {
+  async findOne(
+    taskNumber: number,
+    projectId: number,
+    userId: number,
+  ): Promise<Task> {
     const task = await this.taskRepository.findOne({
       where: { taskNumber, project: { id: projectId } },
       relations: ['project', 'assignee', 'subtasks'],
     });
-    if (!task) throw new NotFoundException(`Tarea #${taskNumber} no encontrada en este proyecto`);
+    if (!task)
+      throw new NotFoundException(
+        `Tarea #${taskNumber} no encontrada en este proyecto`,
+      );
 
     await this.checkViewerPermission(task.project.id, userId);
     return task;
   }
 
   // Editar tarea por taskNumber
-  async update(taskNumber: number, projectId: number, updateTaskDto: UpdateTaskDto, userId: number): Promise<Task> {
+  async update(
+    taskNumber: number,
+    projectId: number,
+    updateTaskDto: UpdateTaskDto,
+    userId: number,
+  ): Promise<Task> {
     const task = await this.findOne(taskNumber, projectId, userId);
     await this.checkMemberPermission(task.project.id, userId);
 
@@ -127,7 +157,9 @@ export class TasksService {
         },
       });
       if (!isMember) {
-        throw new BadRequestException('Este usuario aun no es miembro del proyecto');
+        throw new BadRequestException(
+          'Este usuario aun no es miembro del proyecto',
+        );
       }
 
       const assignee = await this.userRepository.findOne({
@@ -144,9 +176,13 @@ export class TasksService {
     return this.taskRepository.save(task);
   }
 
-
   // Mover tarea por taskNumber
-  async moveTask(taskNumber: number, projectId: number, moveTaskDto: MoveTaskDto, userId: number): Promise<Task> {
+  async moveTask(
+    taskNumber: number,
+    projectId: number,
+    moveTaskDto: MoveTaskDto,
+    userId: number,
+  ): Promise<Task> {
     const task = await this.findOne(taskNumber, projectId, userId);
     await this.checkMemberPermission(task.project.id, userId);
 
@@ -164,7 +200,7 @@ export class TasksService {
 
       if (inProgressCount >= project.wipLimit) {
         throw new BadRequestException(
-          `Límite WIP alcanzado. Máximo ${project.wipLimit} tareas en progreso permitidas`
+          `Límite WIP alcanzado. Máximo ${project.wipLimit} tareas en progreso permitidas`,
         );
       }
     }
@@ -174,7 +210,11 @@ export class TasksService {
   }
 
   // Eliminar tarea por taskNumber
-  async remove(taskNumber: number, projectId: number, userId: number): Promise<{ message: string }> {
+  async remove(
+    taskNumber: number,
+    projectId: number,
+    userId: number,
+  ): Promise<{ message: string }> {
     const task = await this.findOne(taskNumber, projectId, userId);
     await this.checkLeaderPermission(task.project.id, userId);
     await this.taskRepository.remove(task);
@@ -182,11 +222,17 @@ export class TasksService {
   }
 
   // Marcar como desarrollada por taskNumber
-  async developTask(taskNumber: number, projectId: number, userId: number): Promise<Task> {
+  async developTask(
+    taskNumber: number,
+    projectId: number,
+    userId: number,
+  ): Promise<Task> {
     const task = await this.findOne(taskNumber, projectId, userId);
 
     if (!task.assignee || task.assignee.id !== userId) {
-      throw new ForbiddenException('Solo el miembro asignado puede marcar esta tarea como desarrollada');
+      throw new ForbiddenException(
+        'Solo el miembro asignado puede marcar esta tarea como desarrollada',
+      );
     }
 
     if (task.status === TaskStatus.DONE) {
@@ -198,13 +244,18 @@ export class TasksService {
   }
 
   // Filtrar tareas por estado, responsable o proyecto - RF019
-  async filterTasks(projectId: number, userId: number, filters: {
-    status?: TaskStatus;
-    assigneeId?: number;
-  }): Promise<Task[]> {
+  async filterTasks(
+    projectId: number,
+    userId: number,
+    filters: {
+      status?: TaskStatus;
+      assigneeId?: number;
+    },
+  ): Promise<Task[]> {
     await this.checkViewerPermission(projectId, userId);
 
-    const query = this.taskRepository.createQueryBuilder('task')
+    const query = this.taskRepository
+      .createQueryBuilder('task')
       .leftJoinAndSelect('task.assignee', 'assignee')
       .leftJoinAndSelect('task.subtasks', 'subtasks')
       .where('task.projectId = :projectId', { projectId }); // ← cambio aquí
@@ -214,14 +265,20 @@ export class TasksService {
     }
 
     if (filters.assigneeId) {
-      query.andWhere('assignee.id = :assigneeId', { assigneeId: filters.assigneeId });
+      query.andWhere('assignee.id = :assigneeId', {
+        assigneeId: filters.assigneeId,
+      });
     }
 
     return query.getMany();
   }
 
   // Obtener subtareas de una tarea
-  async findSubtasks(taskNumber: number, projectId: number, userId: number): Promise<Subtask[]> {
+  async findSubtasks(
+    taskNumber: number,
+    projectId: number,
+    userId: number,
+  ): Promise<Subtask[]> {
     const task = await this.findOne(taskNumber, projectId, userId);
     return this.subtaskRepository.find({
       where: { task: { id: task.id } },
@@ -230,7 +287,11 @@ export class TasksService {
   }
 
   // Generar subtareas con IA
-  async generateSubtasks(taskNumber: number, projectId: number, userId: number): Promise<Subtask[]> {
+  async generateSubtasks(
+    taskNumber: number,
+    projectId: number,
+    userId: number,
+  ): Promise<Subtask[]> {
     const task = await this.findOne(taskNumber, projectId, userId);
     await this.checkMemberPermission(task.project.id, userId);
 
@@ -246,8 +307,13 @@ export class TasksService {
   // ─── Helpers de permisos ─────────────────────────────────────
 
   // Acceso de lectura: público → cualquier autenticado; privado → solo miembros (MEMBER o LEADER)
-  private async checkViewerPermission(projectId: number, userId: number): Promise<void> {
-    const project = await this.projectRepository.findOne({ where: { id: projectId } });
+  private async checkViewerPermission(
+    projectId: number,
+    userId: number,
+  ): Promise<void> {
+    const project = await this.projectRepository.findOne({
+      where: { id: projectId },
+    });
     if (!project) throw new NotFoundException('Proyecto no encontrado');
 
     if (project.isPublic) return; // proyecto público, cualquier usuario autenticado puede ver
@@ -255,24 +321,40 @@ export class TasksService {
     const membership = await this.memberRepository.findOne({
       where: { project: { id: projectId }, user: { id: userId } },
     });
-    if (!membership) throw new ForbiddenException('Este proyecto es privado. Solo sus miembros pueden ver sus tareas');
+    if (!membership)
+      throw new ForbiddenException(
+        'Este proyecto es privado. Solo sus miembros pueden ver sus tareas',
+      );
   }
 
   // Verifica que el usuario sea MEMBER o LEADER
-  private async checkMemberPermission(projectId: number, userId: number): Promise<void> {
+  private async checkMemberPermission(
+    projectId: number,
+    userId: number,
+  ): Promise<void> {
     const membership = await this.memberRepository.findOne({
       where: { project: { id: projectId }, user: { id: userId } },
     });
     if (!membership) {
-      throw new ForbiddenException('Necesitas ser miembro del proyecto para realizar esta acción');
+      throw new ForbiddenException(
+        'Necesitas ser miembro del proyecto para realizar esta acción',
+      );
     }
   }
 
   // Verifica que el usuario sea LEADER
-  private async checkLeaderPermission(projectId: number, userId: number): Promise<void> {
+  private async checkLeaderPermission(
+    projectId: number,
+    userId: number,
+  ): Promise<void> {
     const membership = await this.memberRepository.findOne({
-      where: { project: { id: projectId }, user: { id: userId }, role: ProjectRole.LEADER },
+      where: {
+        project: { id: projectId },
+        user: { id: userId },
+        role: ProjectRole.LEADER,
+      },
     });
-    if (!membership) throw new ForbiddenException('Solo el líder puede realizar esta acción');
+    if (!membership)
+      throw new ForbiddenException('Solo el líder puede realizar esta acción');
   }
 }

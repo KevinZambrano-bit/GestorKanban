@@ -4,7 +4,10 @@ import { Repository } from 'typeorm';
 import { NotFoundException, ForbiddenException } from '@nestjs/common';
 import { ProjectsService } from '../src/projects/projects.service';
 import { Project } from '../src/projects/entities/project.entity';
-import { ProjectMember, ProjectRole } from '../src/projects/entities/project-member.entity';
+import {
+  ProjectMember,
+  ProjectRole,
+} from '../src/projects/entities/project-member.entity';
 import { User } from '../src/users/entities/user.entity';
 import { Task } from '../src/tasks/entities/task.entity';
 
@@ -77,7 +80,12 @@ describe('ProjectsService', () => {
 
       const leader = { id: userId, name: 'Ana' } as User;
       const project = { id: 1, ...createProjectDto, leader } as Project;
-      const member = { id: 1, project, user: leader, role: ProjectRole.LEADER } as ProjectMember;
+      const member = {
+        id: 1,
+        project,
+        user: leader,
+        role: ProjectRole.LEADER,
+      } as ProjectMember;
 
       userRepository.findOne.mockResolvedValue(leader);
       projectRepository.create.mockReturnValue(project as any);
@@ -88,7 +96,9 @@ describe('ProjectsService', () => {
       const result = await service.create(createProjectDto, userId);
 
       expect(result).toEqual(project);
-      expect(userRepository.findOne).toHaveBeenCalledWith({ where: { id: userId } });
+      expect(userRepository.findOne).toHaveBeenCalledWith({
+        where: { id: userId },
+      });
       expect(projectRepository.save).toHaveBeenCalledWith(project);
       expect(memberRepository.save).toHaveBeenCalledWith(member);
     });
@@ -98,7 +108,11 @@ describe('ProjectsService', () => {
     it('debe devolver los proyectos en los que el usuario participa con su rol', async () => {
       const userId = 2;
       const membership = {
-        project: { id: 10, name: 'Kanban', leader: { id: 1, name: 'Líder', email: 'lider@test.com' } },
+        project: {
+          id: 10,
+          name: 'Kanban',
+          leader: { id: 1, name: 'Líder', email: 'lider@test.com' },
+        },
         role: ProjectRole.MEMBER,
       } as any;
 
@@ -155,7 +169,9 @@ describe('ProjectsService', () => {
 
       projectRepository.findOne.mockResolvedValue(project);
 
-      await expect(service.findOne(projectId, userId)).rejects.toThrow(ForbiddenException);
+      await expect(service.findOne(projectId, userId)).rejects.toThrow(
+        ForbiddenException,
+      );
     });
   });
 
@@ -163,14 +179,30 @@ describe('ProjectsService', () => {
     it('debe invitar a un usuario al proyecto cuando el solicitante es líder', async () => {
       const projectId = 11;
       const userId = 1;
-      const inviteMemberDto = { email: 'nuevo@test.com', role: ProjectRole.MEMBER } as any;
+      const inviteMemberDto = {
+        email: 'nuevo@test.com',
+        role: ProjectRole.MEMBER,
+      } as any;
       const project = { id: projectId } as Project;
-      const user = { id: 20, name: 'Nuevo Usuario', email: inviteMemberDto.email } as User;
+      const user = {
+        id: 20,
+        name: 'Nuevo Usuario',
+        email: inviteMemberDto.email,
+      } as User;
       const leaderMembership = { id: 2, role: ProjectRole.LEADER } as any;
-      const newMembership = { id: 3, project, user, role: ProjectRole.MEMBER } as any;
+      const newMembership = {
+        id: 3,
+        project,
+        user,
+        role: ProjectRole.MEMBER,
+      } as any;
 
       memberRepository.findOne.mockImplementation(({ where }: any) => {
-        if (where.project?.id === projectId && where.user?.id === userId && where.role === ProjectRole.LEADER) {
+        if (
+          where.project?.id === projectId &&
+          where.user?.id === userId &&
+          where.role === ProjectRole.LEADER
+        ) {
           return Promise.resolve(leaderMembership);
         }
         if (where.project?.id === projectId && where.user?.id === user.id) {
@@ -180,12 +212,18 @@ describe('ProjectsService', () => {
       });
       projectRepository.findOne.mockResolvedValue(project as any);
       userRepository.findOne.mockResolvedValue(user as any);
-      memberRepository.create.mockReturnValue(newMembership as any);
-      memberRepository.save.mockResolvedValue(newMembership as any);
+      memberRepository.create.mockReturnValue(newMembership);
+      memberRepository.save.mockResolvedValue(newMembership);
 
-      const result = await service.inviteMember(projectId, inviteMemberDto, userId);
+      const result = await service.inviteMember(
+        projectId,
+        inviteMemberDto,
+        userId,
+      );
 
-      expect(result).toEqual({ message: `${user.name} agregado como ${newMembership.role} correctamente` });
+      expect(result).toEqual({
+        message: `${user.name} agregado como ${newMembership.role} correctamente`,
+      });
       expect(memberRepository.save).toHaveBeenCalledWith(newMembership);
     });
   });

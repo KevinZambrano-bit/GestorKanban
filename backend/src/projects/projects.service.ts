@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Project } from './entities/project.entity';
@@ -20,10 +24,13 @@ export class ProjectsService {
     private userRepository: Repository<User>,
     @InjectRepository(Task)
     private taskRepository: Repository<Task>,
-  ) { }
+  ) {}
 
   // Crear proyecto → el creador queda como LEADER
-  async create(createProjectDto: CreateProjectDto, userId: number): Promise<Project> {
+  async create(
+    createProjectDto: CreateProjectDto,
+    userId: number,
+  ): Promise<Project> {
     const leader = await this.userRepository.findOne({ where: { id: userId } });
 
     const project = this.projectRepository.create({
@@ -85,7 +92,8 @@ export class ProjectsService {
       relations: ['leader', 'members', 'members.user'],
     });
 
-    if (!project) throw new NotFoundException(`Proyecto con ID ${id} no encontrado`);
+    if (!project)
+      throw new NotFoundException(`Proyecto con ID ${id} no encontrado`);
 
     // Si es público cualquier usuario autenticado puede verlo
     if (project.isPublic) return project;
@@ -100,7 +108,11 @@ export class ProjectsService {
   }
 
   // Editar proyecto (solo LEADER)
-  async update(id: number, updateProjectDto: UpdateProjectDto, userId: number): Promise<Project> {
+  async update(
+    id: number,
+    updateProjectDto: UpdateProjectDto,
+    userId: number,
+  ): Promise<Project> {
     const project = await this.findOne(id, userId);
     await this.checkLeaderPermission(id, userId);
     Object.assign(project, updateProjectDto);
@@ -116,7 +128,11 @@ export class ProjectsService {
   }
 
   // Invitar miembro por email (solo LEADER)
-  async inviteMember(id: number, inviteMemberDto: InviteMemberDto, userId: number): Promise<{ message: string }> {
+  async inviteMember(
+    id: number,
+    inviteMemberDto: InviteMemberDto,
+    userId: number,
+  ): Promise<{ message: string }> {
     await this.checkLeaderPermission(id, userId);
 
     const project = await this.projectRepository.findOne({ where: { id } });
@@ -124,13 +140,17 @@ export class ProjectsService {
       where: { email: inviteMemberDto.email },
     });
 
-    if (!user) throw new NotFoundException(`Usuario con email ${inviteMemberDto.email} no encontrado`);
+    if (!user)
+      throw new NotFoundException(
+        `Usuario con email ${inviteMemberDto.email} no encontrado`,
+      );
 
     // Verificar si ya es miembro
     const exists = await this.memberRepository.findOne({
       where: { project: { id }, user: { id: user.id } },
     });
-    if (exists) throw new ForbiddenException('El usuario ya es miembro de este proyecto');
+    if (exists)
+      throw new ForbiddenException('El usuario ya es miembro de este proyecto');
 
     const member = this.memberRepository.create({
       project,
@@ -139,11 +159,17 @@ export class ProjectsService {
     });
     await this.memberRepository.save(member);
 
-    return { message: `${user.name} agregado como ${member.role} correctamente` };
+    return {
+      message: `${user.name} agregado como ${member.role} correctamente`,
+    };
   }
 
   // Configurar límite WIP (solo LEADER)
-  async updateWipLimit(id: number, wipLimit: number, userId: number): Promise<Project> {
+  async updateWipLimit(
+    id: number,
+    wipLimit: number,
+    userId: number,
+  ): Promise<Project> {
     await this.checkLeaderPermission(id, userId);
     const project = await this.projectRepository.findOne({ where: { id } });
     project.wipLimit = wipLimit;
@@ -170,12 +196,18 @@ export class ProjectsService {
   }
 
   // Eliminar miembro del proyecto (solo LEADER)
-  async removeMember(id: number, memberId: number, userId: number): Promise<{ message: string }> {
+  async removeMember(
+    id: number,
+    memberId: number,
+    userId: number,
+  ): Promise<{ message: string }> {
     await this.checkLeaderPermission(id, userId);
 
     // Verificar que no se esté eliminando a sí mismo
     if (memberId === userId) {
-      throw new ForbiddenException('No puedes eliminarte a ti mismo del proyecto');
+      throw new ForbiddenException(
+        'No puedes eliminarte a ti mismo del proyecto',
+      );
     }
 
     // Verificar que el miembro existe en el proyecto
@@ -195,17 +227,22 @@ export class ProjectsService {
     // Desasignar todas las tareas del miembro eliminado
     await this.taskRepository.update(
       { project: { id }, assignee: { id: memberId } },
-      { assignee: null }
+      { assignee: null },
     );
 
     // Eliminar la membresía
     await this.memberRepository.remove(membership);
 
-    return { message: `${membership.user.name} ha sido eliminado del proyecto y sus tareas han sido desasignadas` };
+    return {
+      message: `${membership.user.name} ha sido eliminado del proyecto y sus tareas han sido desasignadas`,
+    };
   }
 
   // Helper → verifica que el usuario sea LEADER del proyecto
-  private async checkLeaderPermission(projectId: number, userId: number): Promise<void> {
+  private async checkLeaderPermission(
+    projectId: number,
+    userId: number,
+  ): Promise<void> {
     const membership = await this.memberRepository.findOne({
       where: {
         project: { id: projectId },
@@ -213,6 +250,7 @@ export class ProjectsService {
         role: ProjectRole.LEADER,
       },
     });
-    if (!membership) throw new ForbiddenException('Solo el líder puede realizar esta acción');
+    if (!membership)
+      throw new ForbiddenException('Solo el líder puede realizar esta acción');
   }
 }

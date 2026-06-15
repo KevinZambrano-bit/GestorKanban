@@ -55,5 +55,4 @@ describe('AuthController', () => {
       expect(authService.register).toHaveBeenCalledWith(dto);
     });
   });
-
 });

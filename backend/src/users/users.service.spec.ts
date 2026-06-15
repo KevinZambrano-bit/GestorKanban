@@ -211,7 +211,9 @@ describe('UsersService', () => {
 
       userRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.update(userId, {})).rejects.toThrow(NotFoundException);
+      await expect(service.update(userId, {})).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('debe lanzar error si el rol no existe', async () => {
@@ -231,7 +233,9 @@ describe('UsersService', () => {
       userRepository.findOne.mockResolvedValue(user as any);
       rolesService.findOne.mockResolvedValue(null);
 
-      await expect(service.update(userId, updateUserDto)).rejects.toThrow(NotFoundException);
+      await expect(service.update(userId, updateUserDto)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 

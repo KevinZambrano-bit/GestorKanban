@@ -17,9 +17,7 @@ describe('CreateTaskDto', () => {
 
     expect(errors.length).toBeGreaterThan(0);
 
-    const titleError = errors.find(
-      (error) => error.property === 'title',
-    );
+    const titleError = errors.find((error) => error.property === 'title');
 
     expect(titleError).toBeDefined();
   });

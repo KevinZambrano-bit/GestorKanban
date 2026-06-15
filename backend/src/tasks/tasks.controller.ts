@@ -1,5 +1,22 @@
-import { Controller, Get, Post, Patch, Delete, Param, Body, UseGuards, Req, Query } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Param,
+  Body,
+  UseGuards,
+  Req,
+  Query,
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { TasksService } from './tasks.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
@@ -15,7 +32,7 @@ import { TaskStatus } from './entities/task.entity';
 @Controller('projects/:projectId/tasks')
 @UseGuards(JwtAuthGuard, ProjectRoleGuard)
 export class TasksController {
-  constructor(private tasksService: TasksService) { }
+  constructor(private tasksService: TasksService) {}
 
   // POST /api/projects/:projectId/tasks
   @Post()
@@ -33,17 +50,16 @@ export class TasksController {
   @Get()
   @RequireProjectRole(ProjectRole.MEMBER, ProjectRole.LEADER)
   @ApiOperation({ summary: 'Listar tareas del proyecto' })
-  findAll(
-    @Param('projectId') projectId: string,
-    @Req() req,
-  ) {
+  findAll(@Param('projectId') projectId: string, @Req() req) {
     return this.tasksService.findByProject(+projectId, req.user.id);
   }
 
   // GET /api/projects/:projectId/tasks/my-tasks
   @Get('my-tasks')
   @RequireProjectRole(ProjectRole.MEMBER, ProjectRole.LEADER)
-  @ApiOperation({ summary: 'Ver tareas asignadas al usuario autenticado en el proyecto' })
+  @ApiOperation({
+    summary: 'Ver tareas asignadas al usuario autenticado en el proyecto',
+  })
   findMyTasks(@Param('projectId') projectId: string, @Req() req) {
     return this.tasksService.findMyTasks(+projectId, req.user.id);
   }
@@ -70,7 +86,12 @@ export class TasksController {
     @Body() updateTaskDto: UpdateTaskDto,
     @Req() req,
   ) {
-    return this.tasksService.update(+taskNumber, +projectId, updateTaskDto, req.user.id);
+    return this.tasksService.update(
+      +taskNumber,
+      +projectId,
+      updateTaskDto,
+      req.user.id,
+    );
   }
 
   // DELETE /api/projects/:projectId/tasks/:taskNumber
@@ -95,7 +116,12 @@ export class TasksController {
     @Body() moveTaskDto: MoveTaskDto,
     @Req() req,
   ) {
-    return this.tasksService.moveTask(+taskNumber, +projectId, moveTaskDto, req.user.id);
+    return this.tasksService.moveTask(
+      +taskNumber,
+      +projectId,
+      moveTaskDto,
+      req.user.id,
+    );
   }
 
   // GET /api/projects/:projectId/tasks/:taskNumber/subtasks
@@ -119,13 +145,19 @@ export class TasksController {
     @Param('projectId') projectId: string,
     @Req() req,
   ) {
-    return this.tasksService.generateSubtasks(+taskNumber, +projectId, req.user.id);
+    return this.tasksService.generateSubtasks(
+      +taskNumber,
+      +projectId,
+      req.user.id,
+    );
   }
 
   // PATCH /api/projects/:projectId/tasks/:taskNumber/develop
   @Patch(':taskNumber/develop')
   @RequireProjectRole(ProjectRole.MEMBER, ProjectRole.LEADER)
-  @ApiOperation({ summary: 'Marcar tarea como desarrollada (solo el miembro asignado)' })
+  @ApiOperation({
+    summary: 'Marcar tarea como desarrollada (solo el miembro asignado)',
+  })
   developTask(
     @Param('taskNumber') taskNumber: string,
     @Param('projectId') projectId: string,

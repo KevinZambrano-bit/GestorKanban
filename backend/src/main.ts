@@ -12,7 +12,9 @@ async function bootstrap() {
   // Configuración de Swagger
   const config = new DocumentBuilder()
     .setTitle('GestorKanban API')
-    .setDescription('Documentación de la API del sistema de gestión de tareas y proyectos')
+    .setDescription(
+      'Documentación de la API del sistema de gestión de tareas y proyectos',
+    )
     .setVersion('1.0')
     .addBearerAuth(
       {

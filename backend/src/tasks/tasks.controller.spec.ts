@@ -83,7 +83,11 @@ describe('TasksController', () => {
       const result = await controller.create(projectId, createTaskDto, req);
 
       expect(result).toEqual(createdTask);
-      expect(tasksService.create).toHaveBeenCalledWith(1, createTaskDto, userId);
+      expect(tasksService.create).toHaveBeenCalledWith(
+        1,
+        createTaskDto,
+        userId,
+      );
     });
   });
 
@@ -150,10 +154,20 @@ describe('TasksController', () => {
 
       const req = { user: { id: userId } };
 
-      const result = await controller.moveTask(taskNumber, projectId, moveTaskDto, req);
+      const result = await controller.moveTask(
+        taskNumber,
+        projectId,
+        moveTaskDto,
+        req,
+      );
 
       expect(result).toEqual(movedTask);
-      expect(tasksService.moveTask).toHaveBeenCalledWith(1, 1, moveTaskDto, userId);
+      expect(tasksService.moveTask).toHaveBeenCalledWith(
+        1,
+        1,
+        moveTaskDto,
+        userId,
+      );
     });
   });
 });

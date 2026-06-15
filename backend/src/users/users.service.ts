@@ -22,7 +22,8 @@ export class UsersService {
       where: { id },
       relations: ['role'],
     });
-    if (!user) throw new NotFoundException(`Usuario con ID ${id} no encontrado`);
+    if (!user)
+      throw new NotFoundException(`Usuario con ID ${id} no encontrado`);
     return user;
   }
 
@@ -39,7 +40,10 @@ export class UsersService {
     // Si viene un roleId, busca el rol y lo asigna
     if (updateUserDto.roleId) {
       const role = await this.rolesService.findOne(updateUserDto.roleId);
-      if (!role) throw new NotFoundException(`Rol con ID ${updateUserDto.roleId} no encontrado`);
+      if (!role)
+        throw new NotFoundException(
+          `Rol con ID ${updateUserDto.roleId} no encontrado`,
+        );
       user.role = role;
     }
 
