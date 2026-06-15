@@ -17,11 +17,8 @@ describe('RegisterDto', () => {
 
     expect(errors.length).toBeGreaterThan(0);
 
-    const emailError = errors.find(
-      (error) => error.property === 'email',
-    );
+    const emailError = errors.find((error) => error.property === 'email');
 
     expect(emailError).toBeDefined();
   });
-
 });

@@ -30,10 +30,7 @@ export class RolesService implements OnModuleInit {
       {
         name: 'user',
         description: 'Usuario registrado del sistema',
-        permissions: [
-          'create_project',
-          'view_own_projects',
-        ],
+        permissions: ['create_project', 'view_own_projects'],
       },
     ];
 
@@ -42,11 +39,9 @@ export class RolesService implements OnModuleInit {
         where: { name: roleData.name },
       });
       if (!exists) {
-        await this.roleRepository.save(
-          this.roleRepository.create(roleData)
-        );
+        await this.roleRepository.save(this.roleRepository.create(roleData));
       }
-    } 
+    }
   }
 
   async findAll(): Promise<Role[]> {

@@ -2,7 +2,11 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { TasksService } from './tasks.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
+import {
+  NotFoundException,
+  BadRequestException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { Task, TaskStatus } from './entities/task.entity';
 import { Subtask } from './entities/subtask.entity';
 import { Project } from '../projects/entities/project.entity';
@@ -96,7 +100,10 @@ describe('TasksService', () => {
         assignee: null,
       };
 
-      memberRepository.findOne.mockResolvedValue({ id: 1, role: 'member' } as any);
+      memberRepository.findOne.mockResolvedValue({
+        id: 1,
+        role: 'member',
+      } as any);
       projectRepository.findOne.mockResolvedValue(project as any);
       taskRepository.findOne.mockResolvedValue(null);
       taskRepository.create.mockReturnValue(createdTask as any);
@@ -177,7 +184,12 @@ describe('TasksService', () => {
       taskRepository.count.mockResolvedValue(0);
       taskRepository.save.mockResolvedValue(movedTask as any);
 
-      const result = await service.moveTask(taskNumber, projectId, moveTaskDto, userId);
+      const result = await service.moveTask(
+        taskNumber,
+        projectId,
+        moveTaskDto,
+        userId,
+      );
 
       expect(result.status).toEqual(TaskStatus.IN_PROGRESS);
       expect(taskRepository.save).toHaveBeenCalled();
@@ -231,7 +243,10 @@ describe('TasksService', () => {
 
       taskRepository.findOne.mockResolvedValue(task as any);
       memberRepository.findOne.mockResolvedValue({ id: 1 } as any);
-      projectRepository.findOne.mockResolvedValue({ id: 1, isPublic: true } as any);
+      projectRepository.findOne.mockResolvedValue({
+        id: 1,
+        isPublic: true,
+      } as any);
 
       const result = await service.findOne(taskNumber, projectId, userId);
 

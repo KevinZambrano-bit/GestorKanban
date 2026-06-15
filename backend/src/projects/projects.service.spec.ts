@@ -186,7 +186,9 @@ describe('ProjectsService', () => {
 
       projectRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.findOne(projectId, userId)).rejects.toThrow(NotFoundException);
+      await expect(service.findOne(projectId, userId)).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('debe lanzar error si el usuario no es miembro de un proyecto privado', async () => {
@@ -202,7 +204,9 @@ describe('ProjectsService', () => {
 
       projectRepository.findOne.mockResolvedValue(project as any);
 
-      await expect(service.findOne(projectId, userId)).rejects.toThrow(ForbiddenException);
+      await expect(service.findOne(projectId, userId)).rejects.toThrow(
+        ForbiddenException,
+      );
     });
   });
 
@@ -306,7 +310,11 @@ describe('ProjectsService', () => {
       memberRepository.create.mockReturnValue(member as any);
       memberRepository.save.mockResolvedValue(member as any);
 
-      const result = await service.inviteMember(projectId, inviteMemberDto, userId);
+      const result = await service.inviteMember(
+        projectId,
+        inviteMemberDto,
+        userId,
+      );
 
       expect(result.message).toContain('agregado');
       expect(memberRepository.save).toHaveBeenCalled();

@@ -1,4 +1,9 @@
-import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  ForbiddenException,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -34,7 +39,7 @@ export class GlobalRoleGuard implements CanActivate {
     const hasRole = requiredRoles.includes(user.role?.name);
     if (!hasRole) {
       throw new ForbiddenException(
-        `Necesitas rol ${requiredRoles.join(' o ')} para realizar esta acción`
+        `Necesitas rol ${requiredRoles.join(' o ')} para realizar esta acción`,
       );
     }
 

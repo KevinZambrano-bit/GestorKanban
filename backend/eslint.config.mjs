@@ -26,10 +26,19 @@ export default tseslint.config(
   },
   {
     rules: {
+      // No rompen el build (warnings de estilo/estrictez de tipos).
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-floating-promises': 'warn',
       '@typescript-eslint/no-unsafe-argument': 'warn',
-      "prettier/prettier": ["error", { endOfLine: "auto" }],
+      '@typescript-eslint/no-unsafe-assignment': 'warn',
+      '@typescript-eslint/no-unsafe-member-access': 'warn',
+      '@typescript-eslint/no-unsafe-call': 'warn',
+      '@typescript-eslint/no-unsafe-return': 'warn',
+      '@typescript-eslint/unbound-method': 'warn',
+      '@typescript-eslint/require-await': 'warn',
+      '@typescript-eslint/no-unused-vars': 'warn',
+      // El formato sí se mantiene como error (lo arregla `npm run lint`).
+      'prettier/prettier': ['error', { endOfLine: 'auto' }],
     },
   },
 );

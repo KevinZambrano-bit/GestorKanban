@@ -21,7 +21,9 @@ export class AiController {
         subtasks: result.subtasks,
       };
     } catch (error) {
-      this.logger.error(`Error en generate_subtasks: ${(error as Error).message}`);
+      this.logger.error(
+        `Error en generate_subtasks: ${(error as Error).message}`,
+      );
       throw new RpcException((error as Error).message);
     }
   }

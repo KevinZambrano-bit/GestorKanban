@@ -87,7 +87,10 @@ describe('ProjectsController', () => {
       const result = await controller.create(createProjectDto, req);
 
       expect(result).toEqual(createdProject);
-      expect(projectsService.create).toHaveBeenCalledWith(createProjectDto, userId);
+      expect(projectsService.create).toHaveBeenCalledWith(
+        createProjectDto,
+        userId,
+      );
     });
   });
 
@@ -203,7 +206,11 @@ describe('ProjectsController', () => {
       const result = await controller.update(projectId, updateProjectDto, req);
 
       expect(result).toEqual(updatedProject);
-      expect(projectsService.update).toHaveBeenCalledWith(1, updateProjectDto, userId);
+      expect(projectsService.update).toHaveBeenCalledWith(
+        1,
+        updateProjectDto,
+        userId,
+      );
     });
   });
 
@@ -253,10 +260,18 @@ describe('ProjectsController', () => {
 
       const req = { user: { id: userId } };
 
-      const result = await controller.inviteMember(projectId, inviteMemberDto, req);
+      const result = await controller.inviteMember(
+        projectId,
+        inviteMemberDto,
+        req,
+      );
 
       expect(result).toEqual(response);
-      expect(projectsService.inviteMember).toHaveBeenCalledWith(1, inviteMemberDto, userId);
+      expect(projectsService.inviteMember).toHaveBeenCalledWith(
+        1,
+        inviteMemberDto,
+        userId,
+      );
     });
   });
 
@@ -343,7 +358,11 @@ describe('ProjectsController', () => {
       const result = await controller.updateWip(projectId, wipLimit, req);
 
       expect(result).toEqual(updatedProject);
-      expect(projectsService.updateWipLimit).toHaveBeenCalledWith(1, wipLimit, userId);
+      expect(projectsService.updateWipLimit).toHaveBeenCalledWith(
+        1,
+        wipLimit,
+        userId,
+      );
     });
   });
 });
