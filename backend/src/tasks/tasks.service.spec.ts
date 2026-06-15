@@ -12,6 +12,7 @@ import { Subtask } from './entities/subtask.entity';
 import { Project } from '../projects/entities/project.entity';
 import { ProjectMember } from '../projects/entities/project-member.entity';
 import { User } from '../users/entities/user.entity';
+import { AiClientService } from '../ai-client/ai-client.service';
 
 describe('TasksService', () => {
   let service: TasksService;
@@ -59,6 +60,12 @@ describe('TasksService', () => {
           provide: getRepositoryToken(User),
           useValue: {
             findOne: jest.fn(),
+          },
+        },
+        {
+          provide: AiClientService,
+          useValue: {
+            generateSubtasks: jest.fn(),
           },
         },
       ],
