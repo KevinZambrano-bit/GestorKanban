@@ -11,7 +11,7 @@ async function main() {
 
   const result = await client
     .send('generate_subtasks', {
-      task: 'Implementar autenticación JWT',
+      task: 'Implementar websocket en el proyecto de gestión de tareas para actualizaciones en tiempo real',
     })
     .toPromise();
 

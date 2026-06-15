@@ -21,7 +21,7 @@ export class GeminiService {
 
     try {
       const response = await this.ai.models.generateContent({
-        model: 'gemini-2.0-flash-lite',
+        model: 'gemini-3.5-flash',
         contents: prompt,
       });
 
@@ -48,13 +48,8 @@ export class GeminiService {
     } catch (error) {
       const msg = (error as Error).message;
       this.logger.error(`Error al generar subtareas: ${msg}`);
-
-      if (msg.includes('quota') || msg.includes('RESOURCE_EXHAUSTED')) {
-        this.logger.warn('Cuota excedida — usando fallback local');
-        return this.fallbackSubtasks(task);
-      }
-
-      throw error;
+      this.logger.warn('Usando fallback local');
+      return this.fallbackSubtasks(task);
     }
   }
 
