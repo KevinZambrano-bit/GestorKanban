@@ -109,3 +109,63 @@ code {
   padding: 4px 8px;
   background: var(--code-bg);
 }
+
+.auth-page {
+  max-width: 400px;
+  margin: 60px auto;
+  padding: 0 20px;
+  text-align: left;
+}
+.auth-page h1 {
+  text-align: center;
+  font-size: 28px;
+  margin-bottom: 24px;
+}
+.auth-page form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.auth-page label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 14px;
+  color: var(--text);
+}
+.auth-page input {
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 16px;
+  background: var(--bg);
+  color: var(--text-h);
+}
+.auth-page button {
+  padding: 10px;
+  border: none;
+  border-radius: 6px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 16px;
+  cursor: pointer;
+  margin-top: 4px;
+}
+.auth-page button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.auth-page .error {
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: rgba(239, 68, 68, 0.12);
+  color: #dc2626;
+  font-size: 14px;
+}
+.auth-page .success {
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: rgba(34, 197, 94, 0.12);
+  color: #16a34a;
+  font-size: 14px;
+}
