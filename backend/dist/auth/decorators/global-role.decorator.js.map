@@ -1,0 +1,1 @@
+{"version":3,"file":"global-role.decorator.js","sourceRoot":"","sources":["../../../src/auth/decorators/global-role.decorator.ts"],"names":[],"mappings":";;;AAAA,2CAA6C;AAEhC,QAAA,eAAe,GAAG,YAAY,CAAC;AACrC,MAAM,iBAAiB,GAAG,CAAC,GAAG,KAAe,EAAE,EAAE,CACtD,IAAA,oBAAW,EAAC,uBAAe,EAAE,KAAK,CAAC,CAAC;AADzB,QAAA,iBAAiB,qBACQ"}
