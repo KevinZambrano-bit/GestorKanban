@@ -6,6 +6,7 @@ import {
   ManyToOne,
   CreateDateColumn,
 } from 'typeorm';
+import { Exclude } from 'class-transformer';
 import { Project } from '../../projects/entities/project.entity';
 import { Task } from '../../tasks/entities/task.entity';
 import { ProjectMember } from '../../projects/entities/project-member.entity';
@@ -22,6 +23,8 @@ export class User {
   @Column({ unique: true })
   email: string;
 
+  // Nunca se expone en respuestas HTTP
+  @Exclude({ toPlainOnly: true })
   @Column({ nullable: true })
   password: string; // ← nullable porque los de Google no tienen contraseña
 

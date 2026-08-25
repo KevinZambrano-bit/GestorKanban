@@ -21,6 +21,8 @@ import { TasksService } from './tasks.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { MoveTaskDto } from './dto/move-task.dto';
+import { UpdateSubtaskDto } from './dto/update-subtask.dto';
+import { FilterTasksDto } from './dto/filter-tasks.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ProjectRoleGuard } from '../auth/guards/project-role.guard';
 import { RequireProjectRole } from '../auth/decorators/project-role.decorator';
@@ -62,6 +64,18 @@ export class TasksController {
   })
   findMyTasks(@Param('projectId') projectId: string, @Req() req) {
     return this.tasksService.findMyTasks(+projectId, req.user.id);
+  }
+
+  // GET /api/projects/:projectId/tasks/filter?status=&assigneeId=
+  @Get('filter')
+  @RequireProjectRole(ProjectRole.MEMBER, ProjectRole.LEADER)
+  @ApiOperation({ summary: 'Filtrar tareas por estado y/o responsable' })
+  filterTasks(
+    @Param('projectId') projectId: string,
+    @Query() filters: FilterTasksDto,
+    @Req() req,
+  ) {
+    return this.tasksService.filterTasks(+projectId, req.user.id, filters);
   }
 
   // GET /api/projects/:projectId/tasks/:taskNumber
@@ -134,6 +148,49 @@ export class TasksController {
     @Req() req,
   ) {
     return this.tasksService.findSubtasks(+taskNumber, +projectId, req.user.id);
+  }
+
+  // PATCH /api/projects/:projectId/tasks/:taskNumber/subtasks/:subtaskId
+  @Patch(':taskNumber/subtasks/:subtaskId')
+  @RequireProjectRole(ProjectRole.MEMBER, ProjectRole.LEADER)
+  @ApiOperation({
+    summary:
+      'Actualizar subtarea: marcar completada o editar título (member, leader)',
+  })
+  @ApiResponse({ status: 404, description: 'Subtarea no encontrada' })
+  updateSubtask(
+    @Param('taskNumber') taskNumber: string,
+    @Param('subtaskId') subtaskId: string,
+    @Param('projectId') projectId: string,
+    @Body() updateSubtaskDto: UpdateSubtaskDto,
+    @Req() req,
+  ) {
+    return this.tasksService.updateSubtask(
+      +taskNumber,
+      +projectId,
+      +subtaskId,
+      updateSubtaskDto,
+      req.user.id,
+    );
+  }
+
+  // DELETE /api/projects/:projectId/tasks/:taskNumber/subtasks/:subtaskId
+  @Delete(':taskNumber/subtasks/:subtaskId')
+  @RequireProjectRole(ProjectRole.MEMBER, ProjectRole.LEADER)
+  @ApiOperation({ summary: 'Eliminar subtarea (member, leader)' })
+  @ApiResponse({ status: 404, description: 'Subtarea no encontrada' })
+  removeSubtask(
+    @Param('taskNumber') taskNumber: string,
+    @Param('subtaskId') subtaskId: string,
+    @Param('projectId') projectId: string,
+    @Req() req,
+  ) {
+    return this.tasksService.removeSubtask(
+      +taskNumber,
+      +projectId,
+      +subtaskId,
+      req.user.id,
+    );
   }
 
   // POST /api/projects/:projectId/tasks/:taskNumber/generate-subtasks
