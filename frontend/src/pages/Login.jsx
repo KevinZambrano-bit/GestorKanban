@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+
 import useAuth from '../hooks/useAuth'
 
 export default function Login() {
@@ -17,7 +17,7 @@ export default function Login() {
     try {
       await login(email, password)
       setSuccess('Inicio de sesión exitoso. Redirigiendo...')
-      setTimeout(() => navigate('/'), 800)
+
     } catch (err) {
       setError(err.message)
     }
@@ -50,7 +50,6 @@ export default function Login() {
         <button type="submit" disabled={loading}>
           {loading ? 'Entrando...' : 'Entrar'}
         </button>
-      </form>
     </div>
   )
 }

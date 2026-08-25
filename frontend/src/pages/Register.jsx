@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+
 import useAuth from '../hooks/useAuth'
 
 export default function Register() {
@@ -15,12 +15,7 @@ export default function Register() {
     e.preventDefault()
     setError('')
     setSuccess('')
-    try {
-      await register(name, email, password)
-      setSuccess('Cuenta creada exitosamente. Redirigiendo...')
-      setTimeout(() => navigate('/'), 800)
-    } catch (err) {
-      setError(err.message)
+
     }
   }
 
@@ -61,6 +56,7 @@ export default function Register() {
           {loading ? 'Creando...' : 'Crear cuenta'}
         </button>
       </form>
+
     </div>
   )
 }
