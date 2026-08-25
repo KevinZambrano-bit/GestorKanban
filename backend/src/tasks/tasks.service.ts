@@ -17,6 +17,7 @@ import { User } from '../users/entities/user.entity';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { MoveTaskDto } from './dto/move-task.dto';
+import { UpdateSubtaskDto } from './dto/update-subtask.dto';
 import { AiClientService } from '../ai-client/ai-client.service';
 
 @Injectable()
@@ -186,6 +187,16 @@ export class TasksService {
     const task = await this.findOne(taskNumber, projectId, userId);
     await this.checkMemberPermission(task.project.id, userId);
 
+    // Solo el asignado puede marcar una tarea como done
+    if (
+      moveTaskDto.status === TaskStatus.DONE &&
+      (!task.assignee || task.assignee.id !== userId)
+    ) {
+      throw new ForbiddenException(
+        'Solo el miembro asignado puede marcar esta tarea como completada',
+      );
+    }
+
     if (moveTaskDto.status === TaskStatus.IN_PROGRESS) {
       const project = await this.projectRepository.findOne({
         where: { id: projectId },
@@ -286,7 +297,69 @@ export class TasksService {
     });
   }
 
-  // Generar subtareas con IA
+  // Actualizar una subtarea (editar título o marcar completada)
+  async updateSubtask(
+    taskNumber: number,
+    projectId: number,
+    subtaskId: number,
+    updateSubtaskDto: UpdateSubtaskDto,
+    userId: number,
+  ): Promise<Subtask> {
+    const subtask = await this.findTaskSubtask(
+      taskNumber,
+      projectId,
+      subtaskId,
+      userId,
+    );
+
+    if (updateSubtaskDto.title !== undefined)
+      subtask.title = updateSubtaskDto.title;
+    if (updateSubtaskDto.completed !== undefined)
+      subtask.completed = updateSubtaskDto.completed;
+
+    return this.subtaskRepository.save(subtask);
+  }
+
+  // Eliminar una subtarea
+  async removeSubtask(
+    taskNumber: number,
+    projectId: number,
+    subtaskId: number,
+    userId: number,
+  ): Promise<{ message: string }> {
+    const subtask = await this.findTaskSubtask(
+      taskNumber,
+      projectId,
+      subtaskId,
+      userId,
+    );
+
+    await this.subtaskRepository.remove(subtask);
+    return { message: 'Subtarea eliminada correctamente' };
+  }
+
+  // Busca una subtarea validando que pertenezca a la tarea indicada
+  private async findTaskSubtask(
+    taskNumber: number,
+    projectId: number,
+    subtaskId: number,
+    userId: number,
+  ): Promise<Subtask> {
+    const task = await this.findOne(taskNumber, projectId, userId);
+    await this.checkMemberPermission(task.project.id, userId);
+
+    const subtask = await this.subtaskRepository.findOne({
+      where: { id: subtaskId, task: { id: task.id } },
+    });
+    if (!subtask)
+      throw new NotFoundException(
+        `Subtarea con ID ${subtaskId} no encontrada en la tarea #${taskNumber}`,
+      );
+
+    return subtask;
+  }
+
+  // Generar subtareas con IA (reemplaza las existentes)
   async generateSubtasks(
     taskNumber: number,
     projectId: number,
@@ -296,6 +369,14 @@ export class TasksService {
     await this.checkMemberPermission(task.project.id, userId);
 
     const subtaskTitles = await this.aiClient.generateSubtasks(task.title);
+
+    // Regenerar elimina las subtareas anteriores para no duplicar
+    const existing = await this.subtaskRepository.find({
+      where: { task: { id: task.id } },
+    });
+    if (existing.length > 0) {
+      await this.subtaskRepository.remove(existing);
+    }
 
     const subtasks = subtaskTitles.map((title) =>
       this.subtaskRepository.create({ title, task }),

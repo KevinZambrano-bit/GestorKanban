@@ -6,6 +6,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { User } from '../users/entities/user.entity';
 import { ProjectMember } from './entities/project-member.entity';
 import { Project } from './entities/project.entity';
+import { UpdateWipDto } from './dto/update-wip.dto';
 
 describe('ProjectsController', () => {
   let controller: ProjectsController;
@@ -355,7 +356,11 @@ describe('ProjectsController', () => {
 
       const req = { user: { id: userId } };
 
-      const result = await controller.updateWip(projectId, wipLimit, req);
+      const result = await controller.updateWip(
+        projectId,
+        { wipLimit } as UpdateWipDto,
+        req,
+      );
 
       expect(result).toEqual(updatedProject);
       expect(projectsService.updateWipLimit).toHaveBeenCalledWith(

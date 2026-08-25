@@ -19,6 +19,7 @@ import { ProjectsService } from './projects.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { InviteMemberDto } from './dto/invite-member.dto';
+import { UpdateWipDto } from './dto/update-wip.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ProjectRoleGuard } from '../auth/guards/project-role.guard';
 import { RequireProjectRole } from '../auth/decorators/project-role.decorator';
@@ -127,11 +128,16 @@ export class ProjectsController {
   @UseGuards(ProjectRoleGuard)
   @RequireProjectRole(ProjectRole.LEADER)
   @ApiOperation({ summary: 'Configurar límite WIP (solo LEADER)' })
+  @ApiResponse({ status: 400, description: 'wipLimit inválido' })
   updateWip(
     @Param('id') id: string,
-    @Body('wipLimit') wipLimit: number,
+    @Body() updateWipDto: UpdateWipDto,
     @Req() req,
   ) {
-    return this.projectsService.updateWipLimit(+id, wipLimit, req.user.id);
+    return this.projectsService.updateWipLimit(
+      +id,
+      updateWipDto.wipLimit,
+      req.user.id,
+    );
   }
 }

@@ -48,10 +48,20 @@ export class AuthController {
 
   @Get('google/callback')
   @ApiOperation({ summary: 'Callback de Google OAuth2' })
+  @ApiResponse({
+    status: 302,
+    description:
+      'Redirige al frontend con el token en la query (?token=...). Ruta de destino: FRONTEND_URL + /oauth/callback',
+  })
   @UseGuards(GoogleAuthGuard)
   googleCallback(@Req() req, @Res() res) {
     const token = this.authService.generateToken(req.user);
-    res.json(token);
+    const frontendUrl = process.env.FRONTEND_URL
+      ? process.env.FRONTEND_URL.split(',')[0].trim()
+      : 'http://localhost:5173';
+    return res.redirect(
+      `${frontendUrl}/oauth/callback?token=${token.access_token}`,
+    );
   }
 
   @Get('profile')
