@@ -1,0 +1,50 @@
+# ============================================================================
+#  Base de datos en Docker — GestorKanban
+#  UBICACIÓN: en la raíz del repositorio (junto a /backend y /microservicio_ia)
+#
+#  Levanta un contenedor MySQL a partir de la imagen oficial mysql:8.0.
+#  Los datos se guardan en un volumen, así NO se pierden al apagar el contenedor.
+#
+#  Uso:
+#    docker compose up -d        # levantar la BD en segundo plano
+#    docker compose ps           # ver estado
+#    docker compose logs -f db   # ver logs
+#    docker compose down         # detener (conserva los datos)
+#    docker compose down -v      # detener y BORRAR los datos (volumen)
+# ============================================================================
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: gestorkanban-db
+    restart: unless-stopped
+
+    # Variables que la imagen oficial de MySQL usa para inicializarse.
+    # Toman su valor del archivo .env; si no existe, usan el valor por defecto.
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASS:-rootpassword}
+      MYSQL_DATABASE: ${DB_NAME:-gestorkanban}
+      MYSQL_USER: ${DB_USER:-kanban_user}
+      MYSQL_PASSWORD: ${DB_PASS:-kanban_pass}
+
+    # Mapea el puerto del contenedor al de tu máquina.
+    # Desde el backend (corriendo en el host) te conectas a localhost:3306.
+    ports:
+      - "3307:3306"
+
+    # Volumen con nombre: aquí persisten los datos de MySQL.
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+    # Comprobación de salud: el contenedor se marca "healthy" cuando MySQL
+    # ya acepta conexiones. Útil si luego contenerizas también el backend.
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-p${DB_ROOT_PASS:-rootpassword}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+# Volumen administrado por Docker donde viven los datos de la BD.
+volumes:
+  mysql_data:

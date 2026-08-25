@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+
 import useAuth from '../hooks/useAuth'
 
 export default function Login() {
@@ -17,7 +17,7 @@ export default function Login() {
     try {
       await login(email, password)
       setSuccess('Inicio de sesión exitoso. Redirigiendo...')
-      navigate('/')
+
     } catch (err) {
       setError(err.message)
     }
@@ -50,20 +50,6 @@ export default function Login() {
         <button type="submit" disabled={loading}>
           {loading ? 'Entrando...' : 'Entrar'}
         </button>
-        <button
-          type="button"
-          className="google-button"
-          onClick={() => {
-            window.location.href = `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/auth/google`
-          }}
-          disabled={loading}
-        >
-          Continuar con Google
-        </button>
-      </form>
-      <p className="auth-link">
-        ¿No tienes una cuenta? <Link to="/register">Crear cuenta</Link>
-      </p>
     </div>
   )
 }

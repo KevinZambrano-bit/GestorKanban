@@ -155,19 +155,7 @@ code {
   opacity: 0.6;
   cursor: not-allowed;
 }
-.auth-page .google-button {
-  background: #fff;
-  color: var(--text-h);
-  border: 1px solid var(--border);
-}
-.auth-link {
-  margin-top: 20px;
-  text-align: center;
-  font-size: 14px;
-}
-.auth-link a {
-  color: var(--accent);
-}
+
 .auth-page .error {
   padding: 8px 12px;
   border-radius: 6px;

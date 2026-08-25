@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+
 import useAuth from '../hooks/useAuth'
 
 export default function Register() {
@@ -15,21 +15,7 @@ export default function Register() {
     e.preventDefault()
     setError('')
     setSuccess('')
-    if (password.length < 6) {
-      setError('La contraseña debe tener al menos 6 caracteres')
-      return
-    }
 
-    try {
-      await register(name, email, password)
-      setSuccess('Cuenta creada exitosamente. Redirigiendo...')
-      navigate('/')
-    } catch (err) {
-      setError(
-        err.message.includes('409') || err.message.toLowerCase().includes('registrado')
-          ? 'Este email ya está registrado'
-          : err.message,
-      )
     }
   }
 
@@ -70,9 +56,7 @@ export default function Register() {
           {loading ? 'Creando...' : 'Crear cuenta'}
         </button>
       </form>
-      <p className="auth-link">
-        ¿Ya tienes una cuenta? <Link to="/login">Iniciar sesión</Link>
-      </p>
+
     </div>
   )
 }
