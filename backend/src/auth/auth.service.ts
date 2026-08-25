@@ -107,7 +107,7 @@ export class AuthService {
 
   // ─── Helpers ─────────────────────────────────────────────────
 
-  generateToken(user: User): { access_token: string } {
+  generateToken(user: User): { access_token: string; user: Partial<User> } {
     const payload = {
       sub: user.id,
       email: user.email,
@@ -115,6 +115,13 @@ export class AuthService {
     };
     return {
       access_token: this.jwtService.sign(payload),
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        avatar: user.avatar,
+      },
     };
   }
 
