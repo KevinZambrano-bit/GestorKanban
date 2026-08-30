@@ -1,5 +1,5 @@
 import { useState } from 'react'
-
+import { useNavigate } from 'react-router-dom'
 import useAuth from '../hooks/useAuth'
 
 export default function Register() {
@@ -9,13 +9,15 @@ export default function Register() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
-    setSuccess('')
-
+    try {
+      await register(name, email, password)
+      navigate('/', { replace: true })
+    } catch (err) {
+      setError(err.message)
     }
   }
 
@@ -51,12 +53,10 @@ export default function Register() {
           />
         </label>
         {error && <p className="error">{error}</p>}
-        {success && <p className="success">{success}</p>}
         <button type="submit" disabled={loading}>
           {loading ? 'Creando...' : 'Crear cuenta'}
         </button>
       </form>
-
     </div>
   )
 }
