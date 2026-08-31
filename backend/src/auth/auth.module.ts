@@ -10,6 +10,15 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { User } from '../users/entities/user.entity';
 import { RolesModule } from '../roles/roles.module';
 
+const googleStrategyProvider = {
+  provide: GoogleStrategy,
+  useFactory: (config: ConfigService, authService: AuthService) => {
+    if (!config.get<string>('GOOGLE_CLIENT_ID')) return null;
+    return new GoogleStrategy(config, authService);
+  },
+  inject: [ConfigService, AuthService],
+};
+
 @Module({
   imports: [
     PassportModule,
@@ -25,7 +34,7 @@ import { RolesModule } from '../roles/roles.module';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, GoogleStrategy, JwtStrategy],
+  providers: [AuthService, googleStrategyProvider, JwtStrategy],
   exports: [AuthService, JwtModule],
 })
 export class AuthModule {}
