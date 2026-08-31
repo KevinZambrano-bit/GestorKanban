@@ -1,0 +1,65 @@
+import { useState } from "react";
+import useAuth from "../hooks/useAuth";
+import { useNavigate, Link } from 'react-router-dom'
+
+export default function Register() {
+  const { register, loading } = useAuth();
+  const navigate = useNavigate();
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+    try {
+      await register(name, email, password);
+      navigate("/", { replace: true });
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  return (
+    <div className="auth-page">
+      <h1>Registrarse</h1>
+      <form onSubmit={handleSubmit}>
+        <label>
+          Nombre
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+          />
+        </label>
+        <label>
+          Email
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+        </label>
+        <label>
+          Contraseña
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+        </label>
+        {error && <p className="error">{error}</p>}
+        <button type="submit" disabled={loading}>
+          {loading ? "Creando..." : "Crear cuenta"}
+        </button>
+      </form>
+      <p className="auth-switch">
+        ¿Ya tienes cuenta? <Link to="/login">Inicia sesión</Link>
+      </p>
+    </div>
+  );
+}
