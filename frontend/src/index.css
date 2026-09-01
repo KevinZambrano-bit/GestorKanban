@@ -780,3 +780,32 @@ code {
   font-size: 14px;
   line-height: 1.5;
 }
+
+.avatar-sm {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  vertical-align: middle;
+  margin-right: 4px;
+  flex-shrink: 0;
+}
+
+.member-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.avatar-sm {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.member-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
