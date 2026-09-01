@@ -400,7 +400,9 @@ code {
 .modal input[type="text"],
 .modal input[type="email"],
 .modal input[type="number"],
-.modal textarea {
+.modal input[type="date"],
+.modal textarea,
+.modal select {
   padding: 8px 10px;
   border: 1px solid var(--border);
   border-radius: 6px;
@@ -584,4 +586,197 @@ code {
 .wip-section input:focus {
   outline: 2px solid var(--accent);
   outline-offset: 1px;
+}
+
+/* --- Kanban board --- */
+.kanban-page {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.kanban-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.kanban-wip-total {
+  font-size: 13px;
+  color: var(--text);
+  background: var(--social-bg);
+  border: 1px solid var(--border);
+  padding: 4px 10px;
+  border-radius: 10px;
+}
+.kanban-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.kanban-error .error {
+  flex: 1;
+  margin: 0;
+}
+.kanban-columns {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  overflow-x: auto;
+  padding-bottom: 8px;
+}
+.kanban-column {
+  flex: 1;
+  min-width: 260px;
+  background: var(--social-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.kanban-column-over {
+  border-color: var(--accent-border);
+  box-shadow: var(--shadow);
+}
+.kanban-column-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.kanban-column-title {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text-h);
+}
+.kanban-column-count {
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: var(--mono);
+}
+.kanban-task-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 64px;
+}
+.kanban-task-card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  cursor: grab;
+  text-align: left;
+  box-shadow: var(--shadow);
+  transition: border-color 0.2s, transform 0.2s;
+}
+.kanban-task-card:hover {
+  border-color: var(--accent-border);
+}
+.kanban-task-card.is-dragging {
+  opacity: 0.4;
+}
+.kanban-task-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.kanban-task-num {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text);
+}
+.kanban-task-title {
+  margin: 0 0 6px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-h);
+}
+.kanban-task-desc {
+  font-size: 13px;
+  color: var(--text);
+  margin-bottom: 10px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.kanban-task-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text);
+}
+.kanban-assignee {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.kanban-date {
+  flex-shrink: 0;
+}
+.kanban-drop-hint {
+  color: var(--text);
+  text-align: center;
+  padding: 14px;
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+/* --- Modal: task form --- */
+.modal-dates {
+  display: flex;
+  gap: 10px;
+}
+.modal-dates label {
+  flex: 1;
+}
+
+/* --- Modal: task detail --- */
+.task-detail-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.task-detail-header h2 {
+  margin: 0;
+  font-size: 20px;
+  flex: 1;
+}
+.task-detail-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.badge-status-pending {
+  background: var(--social-bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+.badge-status-in_progress {
+  background: rgba(234, 179, 8, 0.15);
+  color: #ca8a04;
+  border: 1px solid rgba(234, 179, 8, 0.4);
+}
+.badge-status-done {
+  background: rgba(34, 197, 94, 0.12);
+  color: #16a34a;
+  border: 1px solid rgba(34, 197, 94, 0.4);
+}
+.delete-task-warning {
+  margin: 0 0 20px;
+  font-size: 14px;
+  line-height: 1.5;
 }

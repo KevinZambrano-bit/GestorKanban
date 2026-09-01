@@ -2,8 +2,9 @@ import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import api from '../services/api'
 import useAuth from '../hooks/useAuth'
-import { isLeader } from '../utils/project'
+import { isLeader, getMyRole } from '../utils/project'
 import { CreateProjectModal } from './Projects'
+import KanbanBoard from '../components/board/KanbanBoard'
 
 export default function ProjectDetail() {
   const { id } = useParams()
@@ -14,7 +15,7 @@ export default function ProjectDetail() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [editing, setEditing] = useState(false)
-  const [tab, setTab] = useState('detail')
+  const [tab, setTab] = useState('board')
 
   const fetchProject = useCallback(async () => {
     setLoading(true)
@@ -54,6 +55,7 @@ export default function ProjectDetail() {
   }, [id])
 
   const leader = isLeader(project, user?.id)
+  const myRole = getMyRole(project, user?.id)
 
   const handleDelete = async () => {
     if (!window.confirm('¿Estás seguro de que quieres eliminar este proyecto? Esta acción no se puede deshacer.')) return
@@ -100,45 +102,47 @@ export default function ProjectDetail() {
 
       {error && <p className="error">{error}</p>}
 
-      {leader && (
-        <div className="tabs">
-          <button
-            className={`tab ${tab === 'detail' ? 'active' : ''}`}
-            onClick={() => setTab('detail')}
-          >
-            Detalle
-          </button>
+      <div className="tabs">
+        <button
+          className={`tab ${tab === 'board' ? 'active' : ''}`}
+          onClick={() => setTab('board')}
+        >
+          Tablero
+        </button>
+        <button
+          className={`tab ${tab === 'detail' ? 'active' : ''}`}
+          onClick={() => setTab('detail')}
+        >
+          Detalle
+        </button>
+        {leader && (
           <button
             className={`tab ${tab === 'members' ? 'active' : ''}`}
             onClick={() => setTab('members')}
           >
             Miembros ({members.length})
           </button>
+        )}
+        {leader && (
           <button
             className={`tab ${tab === 'wip' ? 'active' : ''}`}
             onClick={() => setTab('wip')}
           >
             Configuración WIP
           </button>
-        </div>
+        )}
+      </div>
+
+      {tab === 'board' && (
+        <KanbanBoard
+          projectId={id}
+          project={project}
+          members={members}
+          myRole={myRole}
+        />
       )}
 
-      {tab === 'detail' && !leader && (
-        <div className="project-info">
-          <div className="info-row">
-            <span className="info-label">Estado:</span>
-            <span>{project.isPublic ? 'Público' : 'Privado'}</span>
-          </div>
-          {project.wipLimit && (
-            <div className="info-row">
-              <span className="info-label">Límite WIP:</span>
-              <span>{project.wipLimit}</span>
-            </div>
-          )}
-        </div>
-      )}
-
-      {tab === 'detail' && leader && (
+      {tab === 'detail' && (
         <div className="project-info">
           <div className="info-row">
             <span className="info-label">Estado:</span>

@@ -1,24 +1,24 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import useAuth from '../hooks/useAuth'
+import { useState } from "react";
+import useAuth from "../hooks/useAuth";
+import { useNavigate, Link } from 'react-router-dom'
 
 export default function Login() {
-  const { login, loading } = useAuth()
-  const navigate = useNavigate()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
+  const { login, loading } = useAuth();
+  const navigate = useNavigate();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setError('')
+    e.preventDefault();
+    setError("");
     try {
-      await login(email, password)
-      navigate('/', { replace: true })
+      await login(email, password);
+      navigate("/", { replace: true });
     } catch (err) {
-      setError(err.message)
+      setError(err.message);
     }
-  }
+  };
 
   return (
     <div className="auth-page">
@@ -44,9 +44,12 @@ export default function Login() {
         </label>
         {error && <p className="error">{error}</p>}
         <button type="submit" disabled={loading}>
-          {loading ? 'Entrando...' : 'Entrar'}
+          {loading ? "Entrando..." : "Entrar"}
         </button>
       </form>
+      <p className="auth-switch">
+        ¿No tienes cuenta? <Link to="/register">Regístrate</Link>
+      </p>
     </div>
-  )
+  );
 }
