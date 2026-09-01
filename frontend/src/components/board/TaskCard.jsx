@@ -1,5 +1,6 @@
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
+import { getAvatarUrl } from '../../utils/avatar'
 
 export default function TaskCard({ task, onClick }) {
   const {
@@ -33,8 +34,15 @@ export default function TaskCard({ task, onClick }) {
         <p className="kanban-task-desc">{task.description}</p>
       )}
       <div className="kanban-task-footer">
-        {task.assignee?.name ? (
-          <span className="kanban-assignee">{task.assignee.name}</span>
+        {task.assignee ? (
+          <span className="kanban-assignee">
+            <img
+              src={getAvatarUrl(task.assignee.email)}
+              alt={task.assignee.name}
+              className="avatar-sm"
+            />
+            {task.assignee.name}
+          </span>
         ) : (
           <span className="kanban-assignee">Sin asignar</span>
         )}
