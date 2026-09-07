@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   DndContext,
   PointerSensor,
@@ -43,8 +43,20 @@ export default function KanbanBoard({ projectId, project, members, myRole }) {
   const [showCreate, setShowCreate] = useState(false)
   const [detailNumber, setDetailNumber] = useState(null)
   const [detailTask, setDetailTask] = useState(null)
+  const [detailLoading, setDetailLoading] = useState(false)
   const [editingTask, setEditingTask] = useState(null)
   const [deletingTask, setDeletingTask] = useState(null)
+  const originRef = useRef(null)
+  const draggingTaskRef = useRef(null)
+
+  // Buscar la tarea por id en cualquier columna
+  function findTaskById(taskId) {
+    for (const s of TASK_STATUSES) {
+      const found = items[s.value].find((t) => t.id === taskId)
+      if (found) return found
+    }
+    return null
+  }
 
   useEffect(() => {
     const next = emptyGroups()
@@ -53,26 +65,6 @@ export default function KanbanBoard({ projectId, project, members, myRole }) {
     })
     setItems(next)
   }, [tasks])
-
-  useEffect(() => {
-    if (detailNumber == null) return
-    let active = true
-    setError('')
-    setDetailTask(null)
-    getTask(detailNumber)
-      .then((data) => {
-        if (active) setDetailTask(data)
-      })
-      .catch((err) => {
-        if (active) {
-          setError(err.message)
-          setDetailNumber(null)
-        }
-      })
-    return () => {
-      active = false
-    }
-  }, [detailNumber, getTask, setError])
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -87,12 +79,17 @@ export default function KanbanBoard({ projectId, project, members, myRole }) {
     return null
   }
 
+  function handleDragStart(event) {
+    originRef.current = findContainer(event.active.id)
+    draggingTaskRef.current = findTaskById(event.active.id)
+  }
+
   function handleDragOver(event) {
     const { active, over } = event
     const overId = over?.id
     if (!overId) return
 
-    const from = findContainer(active.id)
+    const from = originRef.current || findContainer(active.id)
     const to = findContainer(overId)
     if (!from || !to || from === to) return
 
@@ -108,7 +105,13 @@ export default function KanbanBoard({ projectId, project, members, myRole }) {
   }
 
   const handleOpenDetail = (task) => {
+    setDetailTask(task)
     setDetailNumber(task.taskNumber)
+    setDetailLoading(true)
+    getTask(task.taskNumber)
+      .then((data) => setDetailTask(data))
+      .catch((err) => setError(err.message))
+      .finally(() => setDetailLoading(false))
   }
 
   async function handleDragEnd(event) {
@@ -116,8 +119,9 @@ export default function KanbanBoard({ projectId, project, members, myRole }) {
     const overId = over?.id
     if (!overId) return
 
-    const from = findContainer(active.id)
+    const from = originRef.current || findContainer(active.id)
     const to = findContainer(overId)
+    originRef.current = null
     if (!from || !to) return
 
     if (from === to) {
@@ -128,10 +132,11 @@ export default function KanbanBoard({ projectId, project, members, myRole }) {
         if (oldIndex === -1 || newIndex === -1) return prev
         return { ...prev, [from]: arrayMove(col, oldIndex, newIndex) }
       })
+      draggingTaskRef.current = null
       return
     }
 
-    const task = items[from].find((t) => t.id === active.id)
+    const task = draggingTaskRef.current || findTaskById(active.id)
     if (!task || task.status === to) return
 
     try {
@@ -139,6 +144,8 @@ export default function KanbanBoard({ projectId, project, members, myRole }) {
     } catch (err) {
       setError(err.message)
       await refresh()
+    } finally {
+      draggingTaskRef.current = null
     }
   }
 
@@ -196,6 +203,7 @@ export default function KanbanBoard({ projectId, project, members, myRole }) {
         <DndContext
           sensors={sensors}
           collisionDetection={closestCorners}
+          onDragStart={handleDragStart}
           onDragOver={handleDragOver}
           onDragEnd={handleDragEnd}
         >
@@ -216,6 +224,7 @@ export default function KanbanBoard({ projectId, project, members, myRole }) {
       {detailNumber != null && (
         <TaskDetailModal
           task={detailTask}
+          loading={detailLoading}
           myRole={myRole}
           onClose={handleCloseDetail}
           onEdit={() => setEditingTask(detailTask)}
