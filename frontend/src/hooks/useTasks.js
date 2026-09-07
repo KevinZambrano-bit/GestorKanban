@@ -36,8 +36,10 @@ export default function useTasks(projectId) {
     return created
   }
 
-  const getTask = (taskNumber) =>
-    api.get(`/projects/${projectId}/tasks/${taskNumber}`)
+  const getTask = useCallback(
+    (taskNumber) => api.get(`/projects/${projectId}/tasks/${taskNumber}`),
+    [projectId]
+  )
 
   const updateTask = async (taskNumber, payload) => {
     const updated = await api.patch(

@@ -1,37 +1,40 @@
-import { useState, useEffect, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
-import api from '../services/api'
+import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
+import api from "../services/api";
 export default function Projects() {
-  const navigate = useNavigate()
-  const [projects, setProjects] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-  const [showCreate, setShowCreate] = useState(false)
+  const navigate = useNavigate();
+  const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [showCreate, setShowCreate] = useState(false);
 
   const fetchProjects = useCallback(async () => {
-    setLoading(true)
-    setError('')
+    setLoading(true);
+    setError("");
     try {
-      const data = await api.get('/projects')
-      setProjects(Array.isArray(data) ? data : data.projects || [])
+      const data = await api.get("/projects");
+      setProjects(Array.isArray(data) ? data : data.projects || []);
     } catch (err) {
-      setError(err.message)
+      setError(err.message);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [])
+  }, []);
 
   useEffect(() => {
-    fetchProjects()
-  }, [fetchProjects])
+    fetchProjects();
+  }, [fetchProjects]);
 
   const handleCreated = (newProject) => {
-    setProjects((prev) => [newProject, ...prev])
-    setShowCreate(false)
-  }
+    setProjects((prev) => [newProject, ...prev]);
+    setShowCreate(false);
+  };
 
   return (
     <div className="projects-page">
+      <button className="btn btn-back" onClick={() => navigate("/")}>
+        ← Volver al dashboard
+      </button>
       <div className="projects-header">
         <h1>Mis Proyectos</h1>
         <button className="btn btn-primary" onClick={() => setShowCreate(true)}>
@@ -45,7 +48,10 @@ export default function Projects() {
       {!loading && !error && projects.length === 0 && (
         <div className="empty-state">
           <p>No tienes ningún proyecto todavía.</p>
-          <button className="btn btn-primary" onClick={() => setShowCreate(true)}>
+          <button
+            className="btn btn-primary"
+            onClick={() => setShowCreate(true)}
+          >
             Crea tu primer proyecto
           </button>
         </div>
@@ -62,7 +68,7 @@ export default function Projects() {
               <div className="project-card-header">
                 <h2>{project.name}</h2>
                 <span className={`badge badge-${project.myRole}`}>
-                  {project.myRole === 'leader' ? 'Líder' : 'Miembro'}
+                  {project.myRole === "leader" ? "Líder" : "Miembro"}
                 </span>
               </div>
               {project.description && (
@@ -85,45 +91,51 @@ export default function Projects() {
         />
       )}
     </div>
-  )
+  );
 }
 
 function CreateProjectModal({ onClose, onCreated, initialData, onSaved }) {
-  const isEditing = !!initialData
-  const [name, setName] = useState(initialData?.name || '')
-  const [description, setDescription] = useState(initialData?.description || '')
-  const [isPublic, setIsPublic] = useState(initialData?.isPublic || false)
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState('')
+  const isEditing = !!initialData;
+  const [name, setName] = useState(initialData?.name || "");
+  const [description, setDescription] = useState(
+    initialData?.description || "",
+  );
+  const [isPublic, setIsPublic] = useState(initialData?.isPublic || false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
     if (!name.trim()) {
-      setError('El nombre es requerido')
-      return
+      setError("El nombre es requerido");
+      return;
     }
-    setSaving(true)
-    setError('')
+    setSaving(true);
+    setError("");
     try {
-      const payload = { name: name.trim(), description: description.trim(), isPublic }
+      const payload = {
+        name: name.trim(),
+        description: description.trim(),
+        isPublic,
+      };
       if (isEditing) {
-        const updated = await api.patch(`/projects/${initialData.id}`, payload)
-        onSaved(updated)
+        const updated = await api.patch(`/projects/${initialData.id}`, payload);
+        onSaved(updated);
       } else {
-        const created = await api.post('/projects', payload)
-        onCreated(created)
+        const created = await api.post("/projects", payload);
+        onCreated(created);
       }
     } catch (err) {
-      setError(err.message)
+      setError(err.message);
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
-  }
+  };
 
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
-        <h2>{isEditing ? 'Editar Proyecto' : 'Nuevo Proyecto'}</h2>
+        <h2>{isEditing ? "Editar Proyecto" : "Nuevo Proyecto"}</h2>
         <form onSubmit={handleSubmit}>
           <label>
             Nombre *
@@ -157,13 +169,17 @@ function CreateProjectModal({ onClose, onCreated, initialData, onSaved }) {
               Cancelar
             </button>
             <button type="submit" className="btn btn-primary" disabled={saving}>
-              {saving ? 'Guardando...' : isEditing ? 'Guardar cambios' : 'Crear proyecto'}
+              {saving
+                ? "Guardando..."
+                : isEditing
+                  ? "Guardar cambios"
+                  : "Crear proyecto"}
             </button>
           </div>
         </form>
       </div>
     </div>
-  )
+  );
 }
 
-export { CreateProjectModal }
+export { CreateProjectModal };

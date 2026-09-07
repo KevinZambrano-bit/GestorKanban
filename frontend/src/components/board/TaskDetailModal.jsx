@@ -4,8 +4,9 @@ const STATUS_LABELS = Object.fromEntries(
   TASK_STATUSES.map((s) => [s.value, s.label])
 )
 
-export default function TaskDetailModal({ task, myRole, onClose, onEdit, onDelete }) {
-  if (!task) return <p className="loading">Cargando tarea...</p>
+export default function TaskDetailModal({ task, loading, myRole, onClose, onEdit, onDelete }) {
+  if (!task && loading) return <p className="loading">Cargando tarea...</p>
+  if (!task) return null
 
   return (
     <div className="modal-overlay" onClick={onClose}>
