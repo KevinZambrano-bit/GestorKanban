@@ -41,13 +41,29 @@ export function AuthProvider({ children }) {
     }
   }
 
+  async function loginWithGoogleToken(token) {
+    setLoading(true);
+    try {
+      localStorage.setItem("token", token);
+      const profile = await api.get("/auth/profile");
+      localStorage.setItem("user", JSON.stringify(profile));
+      setUser(profile);
+      return profile;
+    } catch (err) {
+      localStorage.removeItem("token");
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }
+
   function logout() {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     setUser(null);
   }
 
-  const value = { user, loading, login, register, logout };
+  const value = { user, loading, login, register, loginWithGoogleToken, logout }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
