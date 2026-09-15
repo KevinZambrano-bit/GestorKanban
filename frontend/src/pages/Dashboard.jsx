@@ -2,20 +2,16 @@ import { Link } from 'react-router-dom'
 import useAuth from '../hooks/useAuth'
 
 export default function Dashboard() {
-  const { user, logout } = useAuth()
+  const { user } = useAuth()
 
   return (
     <div className="dashboard-page">
-      <h1>Dashboard</h1>
-      <p>Bienvenido, {user?.name || user?.email}</p>
-      <div className="dashboard-actions">
-        <Link to="/projects" className="btn btn-primary">
-          Ver mis proyectos
-        </Link>
-        <button className="btn" onClick={logout}>
-          Cerrar sesión
-        </button>
-      </div>
+      <p className="dashboard-eyebrow">Hola de nuevo</p>
+      <h1>{user?.name || user?.email}</h1>
+      <p className="dashboard-sub">Tus proyectos y tableros te esperan.</p>
+      <Link to="/projects" className="btn btn-primary dashboard-cta">
+        Ver mis proyectos
+      </Link>
     </div>
   )
 }
