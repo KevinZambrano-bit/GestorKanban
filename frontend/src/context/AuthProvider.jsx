@@ -57,13 +57,25 @@ export function AuthProvider({ children }) {
     }
   }
 
+  async function updateProfile(payload) {
+    setLoading(true);
+    try {
+      const updated = await api.patch("/users/me", payload);
+      localStorage.setItem("user", JSON.stringify(updated));
+      setUser(updated);
+      return updated;
+    } finally {
+      setLoading(false);
+    }
+  }
+
   function logout() {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     setUser(null);
   }
 
-  const value = { user, loading, login, register, loginWithGoogleToken, logout }
+  const value = { user, loading, login, register, loginWithGoogleToken, updateProfile, logout }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

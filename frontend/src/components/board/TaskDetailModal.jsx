@@ -1,4 +1,5 @@
 import { TASK_STATUSES } from '../../hooks/useTasks'
+import RequireProjectRole from '../RequireProjectRole'
 
 const STATUS_LABELS = Object.fromEntries(
   TASK_STATUSES.map((s) => [s.value, s.label])
@@ -63,11 +64,11 @@ export default function TaskDetailModal({ task, loading, myRole, onClose, onEdit
           <button type="button" className="btn" onClick={onEdit}>
             Editar
           </button>
-          {myRole === 'leader' && (
+          <RequireProjectRole role={myRole} allowed={['leader']}>
             <button type="button" className="btn btn-danger" onClick={onDelete}>
               Eliminar
             </button>
-          )}
+          </RequireProjectRole>
         </div>
       </div>
     </div>

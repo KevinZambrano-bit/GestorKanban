@@ -32,6 +32,11 @@ async function request(endpoint, options = {}) {
     throw new Error('Sesión expirada')
   }
 
+  if (res.status === 403) {
+    const body = await res.json().catch(() => ({}))
+    throw new Error(body.message || 'No tienes permiso para esta acción')
+  }
+
   if (!res.ok) {
     const body = await res.json().catch(() => ({}))
     throw new Error(body.message || `Error ${res.status}`)

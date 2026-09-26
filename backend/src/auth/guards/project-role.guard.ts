@@ -44,8 +44,12 @@ export class ProjectRoleGuard implements CanActivate {
       where: { id: projectId },
     });
 
-    // Si el proyecto es público cualquier usuario autenticado puede ver
-    if (project?.isPublic) {
+    // Si el proyecto es público cualquier usuario autenticado puede VER,
+    // pero nunca escribir: el bypass solo aplica a peticiones de lectura.
+    // En POST/PATCH/PUT/DELETE se ignora isPublic y se exige membresía
+    // y rol igual que en un proyecto privado.
+    const isReadRequest = request.method === 'GET';
+    if (project?.isPublic && isReadRequest) {
       return true;
     }
 

@@ -2,9 +2,10 @@ import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../services/api";
 import useAuth from "../hooks/useAuth";
-import { isLeader, getMyRole } from "../utils/project";
+import { getMyRole } from "../utils/project";
 import { CreateProjectModal } from "./Projects";
 import KanbanBoard from "../components/board/KanbanBoard";
+import RequireProjectRole from "../components/RequireProjectRole";
 import { getAvatarUrl } from "../utils/avatar";
 
 export default function ProjectDetail() {
@@ -55,7 +56,6 @@ export default function ProjectDetail() {
     }
   }, [id]);
 
-  const leader = isLeader(project, user?.id);
   const myRole = getMyRole(project, user?.id);
 
   const handleDelete = async () => {
@@ -96,7 +96,7 @@ export default function ProjectDetail() {
             <p className="project-detail-desc">{project.description}</p>
           )}
         </div>
-        {leader && (
+        <RequireProjectRole role={myRole} allowed={["leader"]}>
           <div className="project-detail-actions">
             <button className="btn" onClick={() => setEditing(true)}>
               Editar
@@ -105,7 +105,7 @@ export default function ProjectDetail() {
               Eliminar
             </button>
           </div>
-        )}
+        </RequireProjectRole>
       </div>
 
       {error && <p className="error">{error}</p>}
@@ -123,22 +123,22 @@ export default function ProjectDetail() {
         >
           Detalle
         </button>
-        {leader && (
+        <RequireProjectRole role={myRole} allowed={["leader"]}>
           <button
             className={`tab ${tab === "members" ? "active" : ""}`}
             onClick={() => setTab("members")}
           >
             Miembros ({members.length})
           </button>
-        )}
-        {leader && (
+        </RequireProjectRole>
+        <RequireProjectRole role={myRole} allowed={["leader"]}>
           <button
             className={`tab ${tab === "wip" ? "active" : ""}`}
             onClick={() => setTab("wip")}
           >
             Configuración WIP
           </button>
-        )}
+        </RequireProjectRole>
       </div>
 
       {tab === "board" && (
@@ -165,17 +165,21 @@ export default function ProjectDetail() {
         </div>
       )}
 
-      {tab === "members" && leader && (
-        <MembersSection
-          projectId={id}
-          members={members}
-          onRefresh={fetchMembers}
-          onError={setError}
-        />
+      {tab === "members" && (
+        <RequireProjectRole role={myRole} allowed={["leader"]}>
+          <MembersSection
+            projectId={id}
+            members={members}
+            onRefresh={fetchMembers}
+            onError={setError}
+          />
+        </RequireProjectRole>
       )}
 
-      {tab === "wip" && leader && (
-        <WipSection projectId={id} project={project} onUpdated={setProject} />
+      {tab === "wip" && (
+        <RequireProjectRole role={myRole} allowed={["leader"]}>
+          <WipSection projectId={id} project={project} onUpdated={setProject} />
+        </RequireProjectRole>
       )}
 
       {editing && (

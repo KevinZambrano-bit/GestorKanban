@@ -16,6 +16,7 @@ import {
 } from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { GlobalRoleGuard } from '../auth/guards/global-role.guard';
 import { RequireGlobalRole } from '../auth/decorators/global-role.decorator';
@@ -49,6 +50,16 @@ export class UsersController {
   @ApiResponse({ status: 404, description: 'Usuario no encontrado' })
   findOne(@Param('id') id: string) {
     return this.usersService.findOne(+id);
+  }
+
+  // Debe ir ANTES de @Patch(':id'): NestJS empareja por orden de
+  // declaración y si no, 'me' entraría como :id.
+  // Sin @RequireGlobalRole, así que solo aplica JwtAuthGuard.
+  @Patch('me')
+  @ApiOperation({ summary: 'Actualizar el perfil del usuario autenticado' })
+  @ApiResponse({ status: 200, description: 'Perfil actualizado' })
+  updateMe(@Req() req, @Body() updateProfileDto: UpdateProfileDto) {
+    return this.usersService.updateProfile(req.user.id, updateProfileDto);
   }
 
   @Patch(':id')
