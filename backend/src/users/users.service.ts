@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 import { RolesService } from '../roles/roles.service';
 
 @Injectable()
@@ -50,6 +51,20 @@ export class UsersService {
     // Actualiza los demás campos
     if (updateUserDto.name) user.name = updateUserDto.name;
     if (updateUserDto.avatar) user.avatar = updateUserDto.avatar;
+
+    return this.userRepository.save(user);
+  }
+
+  // Autoservicio: el usuario edita su propio perfil.
+  // Solo toca campos seguros; el rol nunca se modifica por esta vía.
+  async updateProfile(
+    id: number,
+    updateProfileDto: UpdateProfileDto,
+  ): Promise<User> {
+    const user = await this.findOne(id);
+
+    if (updateProfileDto.name) user.name = updateProfileDto.name;
+    if (updateProfileDto.avatar) user.avatar = updateProfileDto.avatar;
 
     return this.userRepository.save(user);
   }

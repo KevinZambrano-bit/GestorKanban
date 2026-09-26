@@ -21,7 +21,7 @@ export default function OAuthCallback() {
 
   if (error) {
     return (
-      <main className="auth-page">
+      <main className="centered-page">
         <p className="error">{error}</p>
         <button type="button" onClick={() => navigate('/login', { replace: true })}>
           Volver al login
@@ -30,5 +30,5 @@ export default function OAuthCallback() {
     )
   }
 
-  return <main className="auth-page"><p>Completando inicio de sesión...</p></main>
+  return <main className="centered-page"><p>Completando inicio de sesión...</p></main>
 }

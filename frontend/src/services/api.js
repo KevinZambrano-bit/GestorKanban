@@ -1,4 +1,4 @@
-
+export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api'
 
 function getToken() {
   return localStorage.getItem('token')
@@ -30,6 +30,11 @@ async function request(endpoint, options = {}) {
     clearAuth()
     window.location.href = '/login'
     throw new Error('Sesión expirada')
+  }
+
+  if (res.status === 403) {
+    const body = await res.json().catch(() => ({}))
+    throw new Error(body.message || 'No tienes permiso para esta acción')
   }
 
   if (!res.ok) {
