@@ -3,6 +3,7 @@ import {
   NotFoundException,
   ForbiddenException,
   BadRequestException,
+  ServiceUnavailableException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -368,7 +369,16 @@ export class TasksService {
     const task = await this.findOne(taskNumber, projectId, userId);
     await this.checkMemberPermission(task.project.id, userId);
 
-    const subtaskTitles = await this.aiClient.generateSubtasks(task.title);
+    // El microservicio IA puede estar caído o tardar: se traduce a un 503
+    // con mensaje accionable en lugar de dejar que reviente como un 500 opaco.
+    let subtaskTitles: string[];
+    try {
+      subtaskTitles = await this.aiClient.generateSubtasks(task.title);
+    } catch {
+      throw new ServiceUnavailableException(
+        'No se pudieron generar las subtareas porque el servicio de IA no está disponible. Inténtalo de nuevo en unos segundos.',
+      );
+    }
 
     // Regenerar elimina las subtareas anteriores para no duplicar
     const existing = await this.subtaskRepository.find({

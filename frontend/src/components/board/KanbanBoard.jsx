@@ -37,6 +37,10 @@ export default function KanbanBoard({ projectId, project, members, myRole }) {
     updateTask,
     moveTask,
     deleteTask,
+    generateSubtasks,
+    developTask,
+    updateSubtask,
+    deleteSubtask,
   } = useTasks(projectId)
 
   const [items, setItems] = useState(emptyGroups)
@@ -46,6 +50,12 @@ export default function KanbanBoard({ projectId, project, members, myRole }) {
   const [detailLoading, setDetailLoading] = useState(false)
   const [editingTask, setEditingTask] = useState(null)
   const [deletingTask, setDeletingTask] = useState(null)
+  const [generating, setGenerating] = useState(false)
+  const [developing, setDeveloping] = useState(false)
+  const [pendingSubtaskId, setPendingSubtaskId] = useState(null)
+  // Aparte del error global del tablero: ese bloque llama a refresh(), que
+  // recargaria todas las tareas del proyecto por un fallo puntual de la IA.
+  const [detailError, setDetailError] = useState('')
   const originRef = useRef(null)
   const draggingTaskRef = useRef(null)
 
@@ -108,6 +118,7 @@ export default function KanbanBoard({ projectId, project, members, myRole }) {
     setDetailTask(task)
     setDetailNumber(task.taskNumber)
     setDetailLoading(true)
+    setDetailError('')
     getTask(task.taskNumber)
       .then((data) => setDetailTask(data))
       .catch((err) => setError(err.message))
@@ -175,6 +186,89 @@ export default function KanbanBoard({ projectId, project, members, myRole }) {
   const handleCloseDetail = () => {
     setDetailNumber(null)
     setDetailTask(null)
+    setDetailError('')
+  }
+
+  // detailTask es un estado independiente del array tasks (se puebla con un
+  // getTask aparte al abrir el modal), asi que cada handler replica aqui el
+  // cambio que el hook ya aplico en tasks, sin recargar la pagina.
+  async function handleGenerateSubtasks() {
+    if (!detailTask) return
+    setGenerating(true)
+    setDetailError('')
+    try {
+      const subtasks = await generateSubtasks(detailTask.taskNumber)
+      setDetailTask((prev) => (prev ? { ...prev, subtasks } : prev))
+    } catch (err) {
+      setDetailError(err.message)
+    } finally {
+      setGenerating(false)
+    }
+  }
+
+  async function handleDevelop() {
+    if (!detailTask) return
+    setDeveloping(true)
+    setDetailError('')
+    try {
+      const updated = await developTask(detailTask.taskNumber)
+      setDetailTask(updated)
+    } catch (err) {
+      setDetailError(err.message)
+    } finally {
+      setDeveloping(false)
+    }
+  }
+
+  async function handleToggleSubtask(subtask) {
+    if (!detailTask) return
+    setPendingSubtaskId(subtask.id)
+    setDetailError('')
+    try {
+      const updated = await updateSubtask(detailTask.taskNumber, subtask.id, {
+        completed: !subtask.completed,
+      })
+      setDetailTask((prev) =>
+        prev
+          ? {
+              ...prev,
+              subtasks: (prev.subtasks || []).map((s) =>
+                s.id === subtask.id
+                  ? { ...s, title: updated.title, completed: updated.completed }
+                  : s
+              ),
+            }
+          : prev
+      )
+    } catch (err) {
+      setDetailError(err.message)
+    } finally {
+      setPendingSubtaskId(null)
+    }
+  }
+
+  async function handleRemoveSubtask(subtask) {
+    if (!detailTask) return
+    if (!window.confirm(`¿Eliminar la subtarea "${subtask.title}"?`)) return
+    setPendingSubtaskId(subtask.id)
+    setDetailError('')
+    try {
+      await deleteSubtask(detailTask.taskNumber, subtask.id)
+      setDetailTask((prev) =>
+        prev
+          ? {
+              ...prev,
+              subtasks: (prev.subtasks || []).filter(
+                (s) => s.id !== subtask.id
+              ),
+            }
+          : prev
+      )
+    } catch (err) {
+      setDetailError(err.message)
+    } finally {
+      setPendingSubtaskId(null)
+    }
   }
 
   return (
@@ -226,9 +320,17 @@ export default function KanbanBoard({ projectId, project, members, myRole }) {
           task={detailTask}
           loading={detailLoading}
           myRole={myRole}
+          error={detailError}
+          generating={generating}
+          developing={developing}
+          pendingSubtaskId={pendingSubtaskId}
           onClose={handleCloseDetail}
           onEdit={() => setEditingTask(detailTask)}
           onDelete={() => setDeletingTask(detailTask)}
+          onGenerateSubtasks={handleGenerateSubtasks}
+          onDevelop={handleDevelop}
+          onToggleSubtask={handleToggleSubtask}
+          onRemoveSubtask={handleRemoveSubtask}
         />
       )}
 

@@ -388,15 +388,57 @@ code {
   align-items: center;
   justify-content: center;
 }
+/* Spinner de carga. Sin `display: inline-block` el <span> es inline no
+   reemplazado: ni width/height ni transform le aplicarian, y el aro se
+   veria como un punto de 4px sin rotar. El degradado conico + mascara
+   radial dibuja un arco con cola difuminada en vez del borde de un color. */
 .btn-spinner {
-  width: 16px;
-  height: 16px;
-  border: 2px solid rgba(255, 255, 255, 0.4);
-  border-top-color: #fff;
+  --spinner-size: 16px;
+  --spinner-color: #fff;
+  --spinner-track: rgba(255, 255, 255, 0.3);
+  display: inline-block;
+  flex-shrink: 0;
+  width: var(--spinner-size);
+  height: var(--spinner-size);
   border-radius: 50%;
-  animation: spin 0.7s linear infinite;
+  background: conic-gradient(
+    from 0deg,
+    var(--spinner-track) 0deg,
+    var(--spinner-color) 250deg,
+    var(--spinner-color) 360deg
+  );
+  -webkit-mask: radial-gradient(
+    farthest-side,
+    transparent calc(100% - 2.5px),
+    #000 calc(100% - 2.5px)
+  );
+  mask: radial-gradient(
+    farthest-side,
+    transparent calc(100% - 2.5px),
+    #000 calc(100% - 2.5px)
+  );
+  animation: spinner-rotate 0.75s linear infinite,
+    spinner-pulse 1.5s ease-in-out infinite;
 }
-@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes spinner-rotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes spinner-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .btn-spinner {
+    animation: spinner-pulse 1.6s ease-in-out infinite;
+  }
+}
 
 .auth-divider {
   display: flex;
@@ -1088,4 +1130,158 @@ code {
   justify-content: center;
   gap: 8px;
   text-decoration: none;
+}
+/* --- Detalle de tarea: subtareas e IA --- */
+.modal-wide {
+  max-width: 560px;
+}
+.task-detail-section {
+  border-top: 1px solid var(--border);
+  margin-top: 20px;
+  padding-top: 16px;
+}
+.task-detail-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.task-detail-hint {
+  font-size: 13px;
+  color: var(--text);
+  margin: 4px 0 0;
+}
+.task-detail-ai-actions {
+  border-top: 1px solid var(--border);
+  margin-top: 16px;
+  padding-top: 14px;
+}
+.btn-ai {
+  background: var(--accent-bg);
+  border: 1px solid var(--accent-border);
+  color: var(--text-h);
+}
+.btn-ai:hover:not(:disabled) {
+  border-color: var(--accent);
+  box-shadow: var(--shadow);
+}
+/* Centra spinner + texto y mantiene el ancho estable entre estados */
+.btn-loading {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.btn-ai.is-loading {
+  border-color: var(--accent);
+  animation: ai-glow 1.6s ease-in-out infinite;
+}
+@keyframes ai-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(170, 59, 255, 0);
+  }
+  50% {
+    box-shadow: 0 0 0 4px var(--accent-bg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .btn-ai.is-loading {
+    animation: none;
+  }
+}
+.btn-spinner-dark {
+  --spinner-color: var(--accent);
+  --spinner-track: rgba(170, 59, 255, 0.15);
+}
+.subtask-list {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 220px;
+  overflow-y: auto;
+}
+.subtask-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.subtask-item:hover {
+  border-color: var(--accent-border);
+  box-shadow: var(--shadow);
+}
+.subtask-item.is-completed {
+  background: var(--social-bg);
+}
+.subtask-item.is-completed .subtask-title {
+  text-decoration: line-through;
+}
+.subtask-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  flex: 1;
+  min-width: 0;
+}
+.subtask-check input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+  flex-shrink: 0;
+}
+.subtask-title {
+  font-size: 14px;
+  color: var(--text-h);
+  overflow-wrap: anywhere;
+}
+.subtask-remove {
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  border-radius: 6px;
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.subtask-remove:hover:not(:disabled) {
+  border-color: var(--accent-border);
+  color: var(--accent);
+}
+.subtask-empty {
+  font-size: 13px;
+  color: var(--text);
+  margin: 10px 0 0;
+}
+.subtask-confirm {
+  background: var(--accent-bg);
+  border: 1px solid var(--accent-border);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+.subtask-confirm p {
+  margin: 0 0 10px;
+  font-size: 14px;
+  color: var(--text-h);
+}
+.subtask-confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
 }

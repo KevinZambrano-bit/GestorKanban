@@ -4,6 +4,12 @@ import {
   ClientProxyFactory,
   Transport,
 } from '@nestjs/microservices';
+import { firstValueFrom, timeout } from 'rxjs';
+
+// Generar subtareas tarda 4-20 s contra la API de Gemini. El margen es
+// holgado a propósito: sin él, una llamada colgada dejaría al usuario
+// esperando indefinidamente sin ver nunca un mensaje de error.
+const AI_REQUEST_TIMEOUT_MS = 30_000;
 
 @Injectable()
 export class AiClientService implements OnModuleInit {
@@ -36,12 +42,21 @@ export class AiClientService implements OnModuleInit {
       `Enviando tarea al microservicio IA: "${task.substring(0, 50)}..."`,
     );
 
-    const result = await this.client
-      .send<{
-        success: boolean;
-        subtasks: string[];
-      }>('generate_subtasks', { task })
-      .toPromise();
+    let result: { success: boolean; subtasks: string[] } | undefined;
+    try {
+      result = await firstValueFrom(
+        this.client
+          .send<{ success: boolean; subtasks: string[] }>('generate_subtasks', {
+            task,
+          })
+          .pipe(timeout(AI_REQUEST_TIMEOUT_MS)),
+      );
+    } catch (error) {
+      this.logger.error(
+        `Fallo al contactar con el microservicio IA: ${(error as Error).message}`,
+      );
+      throw new Error('El microservicio IA no respondió a tiempo');
+    }
 
     if (!result?.success || !Array.isArray(result?.subtasks)) {
       throw new Error('Respuesta inválida del microservicio IA');

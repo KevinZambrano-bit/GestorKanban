@@ -68,6 +68,67 @@ export default function useTasks(projectId) {
     setTasks((prev) => prev.filter((t) => t.taskNumber !== taskNumber))
   }
 
+  // Genera subtareas con IA. El backend reemplaza las anteriores por completo,
+  // asi que el array se sustituye en vez de fusionarse.
+  const generateSubtasks = async (taskNumber) => {
+    const subtasks = await api.post(
+      `/projects/${projectId}/tasks/${taskNumber}/generate-subtasks`
+    )
+    setTasks((prev) =>
+      prev.map((t) => (t.taskNumber === taskNumber ? { ...t, subtasks } : t))
+    )
+    return subtasks
+  }
+
+  const developTask = async (taskNumber) => {
+    const updated = await api.patch(
+      `/projects/${projectId}/tasks/${taskNumber}/develop`
+    )
+    setTasks((prev) =>
+      prev.map((t) => (t.taskNumber === taskNumber ? updated : t))
+    )
+    return updated
+  }
+
+  // Solo se propaga title/completed para no meter la relacion task en el estado
+  const updateSubtask = async (taskNumber, subtaskId, payload) => {
+    const updated = await api.patch(
+      `/projects/${projectId}/tasks/${taskNumber}/subtasks/${subtaskId}`,
+      payload
+    )
+    setTasks((prev) =>
+      prev.map((t) =>
+        t.taskNumber === taskNumber
+          ? {
+              ...t,
+              subtasks: (t.subtasks || []).map((s) =>
+                s.id === subtaskId
+                  ? { ...s, title: updated.title, completed: updated.completed }
+                  : s
+              ),
+            }
+          : t
+      )
+    )
+    return updated
+  }
+
+  const deleteSubtask = async (taskNumber, subtaskId) => {
+    await api.delete(
+      `/projects/${projectId}/tasks/${taskNumber}/subtasks/${subtaskId}`
+    )
+    setTasks((prev) =>
+      prev.map((t) =>
+        t.taskNumber === taskNumber
+          ? {
+              ...t,
+              subtasks: (t.subtasks || []).filter((s) => s.id !== subtaskId),
+            }
+          : t
+      )
+    )
+  }
+
   return {
     tasks,
     loading,
@@ -79,5 +140,9 @@ export default function useTasks(projectId) {
     updateTask,
     moveTask,
     deleteTask,
+    generateSubtasks,
+    developTask,
+    updateSubtask,
+    deleteSubtask,
   }
 }
