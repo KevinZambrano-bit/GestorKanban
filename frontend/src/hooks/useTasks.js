@@ -7,6 +7,10 @@ export const TASK_STATUSES = [
   { value: 'done', label: 'Completadas' },
 ]
 
+// Columna virtual del tablero: no es un estado del backend, se deriva de que
+// task.assignee sea null
+export const UNASSIGNED = 'unassigned'
+
 export default function useTasks(projectId) {
   const [tasks, setTasks] = useState([])
   const [loading, setLoading] = useState(true)

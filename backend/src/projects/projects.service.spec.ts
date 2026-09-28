@@ -8,6 +8,23 @@ import { ProjectMember, ProjectRole } from './entities/project-member.entity';
 import { User } from '../users/entities/user.entity';
 import { Task } from '../tasks/entities/task.entity';
 
+// Query builder encadenable que resuelve getRawMany con las filas dadas
+function mockTaskCountsQuery(rows: any[]) {
+  const qb: any = {};
+  for (const method of [
+    'innerJoin',
+    'select',
+    'addSelect',
+    'where',
+    'groupBy',
+    'addGroupBy',
+  ]) {
+    qb[method] = jest.fn().mockReturnValue(qb);
+  }
+  qb.getRawMany = jest.fn().mockResolvedValue(rows);
+  return qb;
+}
+
 describe('ProjectsService', () => {
   let service: ProjectsService;
   let projectRepository: jest.Mocked<Repository<Project>>;
@@ -49,6 +66,7 @@ describe('ProjectsService', () => {
           provide: getRepositoryToken(Task),
           useValue: {
             update: jest.fn(),
+            createQueryBuilder: jest.fn(),
           },
         },
       ],
@@ -141,7 +159,12 @@ describe('ProjectsService', () => {
         },
       ];
 
-      memberRepository.find.mockResolvedValue(projects as any);
+      memberRepository.find
+        .mockResolvedValueOnce(projects as any)
+        .mockResolvedValueOnce([]);
+      taskRepository.createQueryBuilder.mockReturnValue(
+        mockTaskCountsQuery([]),
+      );
 
       const result = await service.findMyProjects(userId);
 
@@ -150,6 +173,16 @@ describe('ProjectsService', () => {
         where: { user: { id: userId } },
         relations: ['project', 'project.leader'],
       });
+    });
+
+    it('debe retornar lista vacía sin consultar miembros ni tareas', async () => {
+      memberRepository.find.mockResolvedValueOnce([]);
+
+      const result = await service.findMyProjects(1);
+
+      expect(result).toEqual([]);
+      expect(memberRepository.find).toHaveBeenCalledTimes(1);
+      expect(taskRepository.createQueryBuilder).not.toHaveBeenCalled();
     });
   });
 

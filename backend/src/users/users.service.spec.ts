@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { UsersService } from './users.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { NotFoundException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { User } from './entities/user.entity';
 import { RolesService } from '../roles/roles.service';
 
@@ -236,6 +236,39 @@ describe('UsersService', () => {
       await expect(service.update(userId, updateUserDto)).rejects.toThrow(
         NotFoundException,
       );
+    });
+
+    it('debe impedir que un admin se quite a sí mismo el rol admin', async () => {
+      const adminId = 1;
+      const admin = {
+        id: adminId,
+        name: 'Kevin',
+        role: { id: 1, name: 'admin' },
+      };
+
+      userRepository.findOne.mockResolvedValue(admin as any);
+      rolesService.findOne.mockResolvedValue({ id: 2, name: 'user' } as any);
+
+      await expect(
+        service.update(adminId, { roleId: 2 }, adminId),
+      ).rejects.toThrow(BadRequestException);
+      expect(userRepository.save).not.toHaveBeenCalled();
+    });
+
+    it('debe permitir que un admin quite el rol admin a otro usuario', async () => {
+      const otherAdmin = { id: 2, name: 'Ana', role: { id: 1, name: 'admin' } };
+      const userRole = { id: 2, name: 'user' };
+
+      userRepository.findOne.mockResolvedValue(otherAdmin as any);
+      rolesService.findOne.mockResolvedValue(userRole as any);
+      userRepository.save.mockResolvedValue({
+        ...otherAdmin,
+        role: userRole,
+      } as any);
+
+      const result = await service.update(2, { roleId: 2 }, 1);
+
+      expect(result.role).toEqual(userRole);
     });
   });
 
