@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
@@ -35,7 +39,13 @@ export class UsersService {
     });
   }
 
-  async update(id: number, updateUserDto: UpdateUserDto): Promise<User> {
+  // actorId es quien hace la petición: se usa para impedir que un admin se
+  // quite a sí mismo el rol admin y la plataforma se quede sin administradores.
+  async update(
+    id: number,
+    updateUserDto: UpdateUserDto,
+    actorId?: number,
+  ): Promise<User> {
     const user = await this.findOne(id);
 
     // Si viene un roleId, busca el rol y lo asigna
@@ -45,6 +55,15 @@ export class UsersService {
         throw new NotFoundException(
           `Rol con ID ${updateUserDto.roleId} no encontrado`,
         );
+      if (
+        actorId === id &&
+        user.role?.name === 'admin' &&
+        role.name !== 'admin'
+      ) {
+        throw new BadRequestException(
+          'No puedes quitarte a ti mismo el rol de administrador',
+        );
+      }
       user.role = role;
     }
 

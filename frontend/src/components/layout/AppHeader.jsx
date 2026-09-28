@@ -5,6 +5,7 @@ import { getAvatarUrl } from '../../utils/avatar'
 export default function AppHeader() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
+  const isAdmin = user?.role?.name === 'admin'
 
   const handleLogout = () => {
     logout()
@@ -29,6 +30,10 @@ export default function AppHeader() {
       <div className="app-user">
         <img src={getAvatarUrl(user?.email)} alt={user?.name} className="avatar-sm" />
         <span className="app-user-name">{user?.name || user?.email}</span>
+        <Link to="/profile" className="app-nav-link">Mi perfil</Link>
+        {isAdmin && (
+          <Link to="/admin" className="app-nav-link app-nav-link-admin">Panel admin</Link>
+        )}
         <button className="btn btn-sm" onClick={handleLogout}>Salir</button>
       </div>
     </header>

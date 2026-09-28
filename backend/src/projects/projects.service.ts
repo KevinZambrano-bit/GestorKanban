@@ -4,11 +4,11 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { Project } from './entities/project.entity';
 import { ProjectMember, ProjectRole } from './entities/project-member.entity';
 import { User } from '../users/entities/user.entity';
-import { Task } from '../tasks/entities/task.entity';
+import { Task, TaskStatus } from '../tasks/entities/task.entity';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { InviteMemberDto } from './dto/invite-member.dto';
@@ -50,17 +50,77 @@ export class ProjectsService {
     return project;
   }
 
-  // Listar proyectos del usuario autenticado
+  // Listar proyectos del usuario autenticado, con resumen de miembros y
+  // tareas por estado para las tarjetas de la lista (2 consultas extra en
+  // total, no por proyecto)
   async findMyProjects(userId: number): Promise<any[]> {
     const memberships = await this.memberRepository.find({
       where: { user: { id: userId } },
       relations: ['project', 'project.leader'],
     });
+    if (memberships.length === 0) return [];
 
-    return memberships.map((m) => ({
-      ...m.project,
-      myRole: m.role,
-    }));
+    const projectIds = memberships.map((m) => m.project.id);
+
+    const [allMembers, taskRows] = await Promise.all([
+      this.memberRepository.find({
+        where: { project: { id: In(projectIds) } },
+        relations: ['user', 'project'],
+        order: { joinedAt: 'ASC' },
+      }),
+      this.taskRepository
+        .createQueryBuilder('task')
+        .innerJoin('task.project', 'project')
+        .select('project.id', 'projectId')
+        .addSelect('task.status', 'status')
+        .addSelect('COUNT(task.id)', 'count')
+        .where('project.id IN (:...projectIds)', { projectIds })
+        .groupBy('project.id')
+        .addGroupBy('task.status')
+        .getRawMany<{ projectId: number; status: string; count: string }>(),
+    ]);
+
+    const membersByProject = new Map<number, ProjectMember[]>();
+    for (const member of allMembers) {
+      const list = membersByProject.get(member.project.id) ?? [];
+      list.push(member);
+      membersByProject.set(member.project.id, list);
+    }
+
+    const countsByProject = new Map<number, Record<string, number>>();
+    for (const row of taskRows) {
+      const id = Number(row.projectId);
+      const counts = countsByProject.get(id) ?? {};
+      counts[row.status] = Number(row.count);
+      countsByProject.set(id, counts);
+    }
+
+    return memberships.map((m) => {
+      const members = membersByProject.get(m.project.id) ?? [];
+      const counts = countsByProject.get(m.project.id) ?? {};
+      const pending = counts[TaskStatus.PENDING] ?? 0;
+      const inProgress = counts[TaskStatus.IN_PROGRESS] ?? 0;
+      const done = counts[TaskStatus.DONE] ?? 0;
+
+      return {
+        ...m.project,
+        myRole: m.role,
+        memberCount: members.length,
+        // Solo datos públicos y los primeros 4, para los mini-avatares
+        members: members.slice(0, 4).map((pm) => ({
+          id: pm.user.id,
+          name: pm.user.name,
+          email: pm.user.email,
+          role: pm.role,
+        })),
+        taskCounts: {
+          pending,
+          in_progress: inProgress,
+          done,
+          total: pending + inProgress + done,
+        },
+      };
+    });
   }
 
   // Listar todos los proyectos (solo admin)

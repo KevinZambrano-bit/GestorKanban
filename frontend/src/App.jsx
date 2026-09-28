@@ -1,6 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 import ProtectedRoute from "./components/ProtectedRoute";
 import PublicRoute from "./components/PublicRoute";
+import RoleRoute from "./components/RoleRoute";
 import AppLayout from "./components/layout/AppLayout";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -9,6 +10,7 @@ import Projects from "./pages/Projects";
 import ProjectDetail from "./pages/ProjectDetail";
 import OAuthCallback from "./pages/OAuthCallback";
 import Profile from "./pages/Profile";
+import AdminPanel from "./pages/AdminPanel";
 import Forbidden from "./pages/Forbidden";
 import NotFound from "./pages/NotFound";
 
@@ -26,6 +28,9 @@ export default function App() {
           <Route path="/projects" element={<Projects />} />
           <Route path="/projects/:id" element={<ProjectDetail />} />
           <Route path="/profile" element={<Profile />} />
+          <Route element={<RoleRoute allowed={["admin"]} />}>
+            <Route path="/admin" element={<AdminPanel />} />
+          </Route>
         </Route>
       </Route>
       <Route path="/forbidden" element={<Forbidden />} />

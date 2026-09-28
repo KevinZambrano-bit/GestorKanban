@@ -11,6 +11,23 @@ import {
 import { User } from '../src/users/entities/user.entity';
 import { Task } from '../src/tasks/entities/task.entity';
 
+// Query builder encadenable que resuelve getRawMany con las filas dadas
+function mockTaskCountsQuery(rows: any[]) {
+  const qb: any = {};
+  for (const method of [
+    'innerJoin',
+    'select',
+    'addSelect',
+    'where',
+    'groupBy',
+    'addGroupBy',
+  ]) {
+    qb[method] = jest.fn().mockReturnValue(qb);
+  }
+  qb.getRawMany = jest.fn().mockResolvedValue(rows);
+  return qb;
+}
+
 describe('ProjectsService', () => {
   let service: ProjectsService;
   let projectRepository: jest.Mocked<Repository<Project>>;
@@ -52,6 +69,7 @@ describe('ProjectsService', () => {
           provide: getRepositoryToken(Task),
           useValue: {
             update: jest.fn(),
+            createQueryBuilder: jest.fn(),
           },
         },
       ],
@@ -116,7 +134,26 @@ describe('ProjectsService', () => {
         role: ProjectRole.MEMBER,
       } as any;
 
-      memberRepository.find.mockResolvedValue([membership]);
+      const leaderMember = {
+        role: ProjectRole.LEADER,
+        project: { id: 10 },
+        user: { id: 1, name: 'Líder', email: 'lider@test.com', password: 'x' },
+      } as any;
+      const selfMember = {
+        role: ProjectRole.MEMBER,
+        project: { id: 10 },
+        user: { id: 2, name: 'Yo', email: 'yo@test.com', password: 'y' },
+      } as any;
+
+      memberRepository.find
+        .mockResolvedValueOnce([membership])
+        .mockResolvedValueOnce([leaderMember, selfMember]);
+      taskRepository.createQueryBuilder.mockReturnValue(
+        mockTaskCountsQuery([
+          { projectId: 10, status: 'pending', count: '3' },
+          { projectId: 10, status: 'done', count: '2' },
+        ]),
+      );
 
       const result = await service.findMyProjects(userId);
 
@@ -126,6 +163,22 @@ describe('ProjectsService', () => {
           name: 'Kanban',
           leader: { id: 1, name: 'Líder', email: 'lider@test.com' },
           myRole: ProjectRole.MEMBER,
+          memberCount: 2,
+          members: [
+            {
+              id: 1,
+              name: 'Líder',
+              email: 'lider@test.com',
+              role: ProjectRole.LEADER,
+            },
+            {
+              id: 2,
+              name: 'Yo',
+              email: 'yo@test.com',
+              role: ProjectRole.MEMBER,
+            },
+          ],
+          taskCounts: { pending: 3, in_progress: 0, done: 2, total: 5 },
         },
       ]);
       expect(memberRepository.find).toHaveBeenCalledWith({

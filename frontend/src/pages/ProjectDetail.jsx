@@ -7,6 +7,7 @@ import { CreateProjectModal } from "./Projects";
 import KanbanBoard from "../components/board/KanbanBoard";
 import RequireProjectRole from "../components/RequireProjectRole";
 import { getAvatarUrl } from "../utils/avatar";
+import ConfirmDialog from "../components/ConfirmDialog";
 
 export default function ProjectDetail() {
   const { id } = useParams();
@@ -18,6 +19,7 @@ export default function ProjectDetail() {
   const [error, setError] = useState("");
   const [editing, setEditing] = useState(false);
   const [tab, setTab] = useState("board");
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   const fetchProject = useCallback(async () => {
     setLoading(true);
@@ -58,19 +60,10 @@ export default function ProjectDetail() {
 
   const myRole = getMyRole(project, user?.id);
 
+  // Si falla, ConfirmDialog muestra el error dentro del modal
   const handleDelete = async () => {
-    if (
-      !window.confirm(
-        "¿Estás seguro de que quieres eliminar este proyecto? Esta acción no se puede deshacer.",
-      )
-    )
-      return;
-    try {
-      await api.delete(`/projects/${id}`);
-      navigate("/projects", { replace: true });
-    } catch (err) {
-      setError(err.message);
-    }
+    await api.delete(`/projects/${id}`);
+    navigate("/projects", { replace: true });
   };
 
   const handleSaved = (updated) => {
@@ -101,7 +94,10 @@ export default function ProjectDetail() {
             <button className="btn" onClick={() => setEditing(true)}>
               Editar
             </button>
-            <button className="btn btn-danger" onClick={handleDelete}>
+            <button
+              className="btn btn-danger"
+              onClick={() => setConfirmingDelete(true)}
+            >
               Eliminar
             </button>
           </div>
@@ -171,7 +167,6 @@ export default function ProjectDetail() {
             projectId={id}
             members={members}
             onRefresh={fetchMembers}
-            onError={setError}
           />
         </RequireProjectRole>
       )}
@@ -189,11 +184,27 @@ export default function ProjectDetail() {
           onSaved={handleSaved}
         />
       )}
+
+      {confirmingDelete && (
+        <ConfirmDialog
+          variant="danger"
+          title="Eliminar proyecto"
+          message={
+            <p>
+              ¿Estás seguro de que quieres eliminar este proyecto? Esta acción
+              no se puede deshacer.
+            </p>
+          }
+          confirmText="Eliminar"
+          onCancel={() => setConfirmingDelete(false)}
+          onConfirm={handleDelete}
+        />
+      )}
     </div>
   );
 }
 
-function MembersSection({ projectId, members, onRefresh, onError }) {
+function MembersSection({ projectId, members, onRefresh }) {
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("member");
   const [sending, setSending] = useState(false);
@@ -220,14 +231,13 @@ function MembersSection({ projectId, members, onRefresh, onError }) {
     }
   };
 
-  const handleRemove = async (memberId, memberName) => {
-    if (!window.confirm(`¿Eliminar a ${memberName} del proyecto?`)) return;
-    try {
-      await api.delete(`/projects/${projectId}/members/${memberId}`);
-      onRefresh();
-    } catch (err) {
-      onError(err.message);
-    }
+  const [removing, setRemoving] = useState(null);
+
+  // Si falla, ConfirmDialog muestra el error dentro del modal
+  const handleRemove = async () => {
+    await api.delete(`/projects/${projectId}/members/${removing.id}`);
+    setRemoving(null);
+    onRefresh();
   };
 
   return (
@@ -272,7 +282,7 @@ function MembersSection({ projectId, members, onRefresh, onError }) {
             {m.role !== "leader" && (
               <button
                 className="btn btn-danger btn-sm"
-                onClick={() => handleRemove(m.id, m.name)}
+                onClick={() => setRemoving({ id: m.id, name: m.name })}
               >
                 Eliminar
               </button>
@@ -280,6 +290,17 @@ function MembersSection({ projectId, members, onRefresh, onError }) {
           </div>
         ))}
       </div>
+
+      {removing && (
+        <ConfirmDialog
+          variant="danger"
+          title="Eliminar miembro"
+          message={<p>¿Eliminar a {removing.name} del proyecto?</p>}
+          confirmText="Eliminar"
+          onCancel={() => setRemoving(null)}
+          onConfirm={handleRemove}
+        />
+      )}
     </div>
   );
 }

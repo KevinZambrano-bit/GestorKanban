@@ -66,8 +66,16 @@ export class UsersController {
   @RequireGlobalRole('admin')
   @ApiOperation({ summary: 'Actualizar datos del usuario' })
   @ApiResponse({ status: 200, description: 'Usuario actualizado' })
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(+id, updateUserDto);
+  @ApiResponse({
+    status: 400,
+    description: 'Un admin no puede quitarse a sí mismo el rol admin',
+  })
+  update(
+    @Param('id') id: string,
+    @Body() updateUserDto: UpdateUserDto,
+    @Req() req,
+  ) {
+    return this.usersService.update(+id, updateUserDto, req.user.id);
   }
 
   @Delete(':id')

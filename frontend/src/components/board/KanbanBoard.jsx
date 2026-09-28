@@ -11,16 +11,35 @@ import {
   arrayMove,
   sortableKeyboardCoordinates,
 } from '@dnd-kit/sortable'
-import useTasks, { TASK_STATUSES } from '../../hooks/useTasks'
+import useTasks, { TASK_STATUSES, UNASSIGNED } from '../../hooks/useTasks'
 import KanbanColumn from './KanbanColumn'
 import TaskFormModal from './TaskFormModal'
 import TaskDetailModal from './TaskDetailModal'
-import DeleteTaskConfirm from './DeleteTaskConfirm'
+import ConfirmDialog from '../ConfirmDialog'
+
+const BOARD_COLUMNS = [
+  { value: UNASSIGNED, label: 'Sin asignar', virtual: true },
+  ...TASK_STATUSES,
+]
+
+const MOVE_UNASSIGNED_MSG = 'Debes asignar la tarea antes de moverla.'
+const DROP_UNASSIGNED_MSG =
+  'No puedes arrastrar tareas a "Sin asignar": la columna se actualiza sola según el responsable.'
 
 function emptyGroups() {
   const groups = {}
-  TASK_STATUSES.forEach((s) => {
-    groups[s.value] = []
+  BOARD_COLUMNS.forEach((c) => {
+    groups[c.value] = []
+  })
+  return groups
+}
+
+// Sin asignado → "Sin asignar" (sea cual sea su estado); si no, su estado real
+function groupTasks(tasks) {
+  const groups = emptyGroups()
+  tasks.forEach((t) => {
+    const key = t.assignee ? t.status : UNASSIGNED
+    if (groups[key]) groups[key].push(t)
   })
   return groups
 }
@@ -53,28 +72,33 @@ export default function KanbanBoard({ projectId, project, members, myRole }) {
   const [generating, setGenerating] = useState(false)
   const [developing, setDeveloping] = useState(false)
   const [pendingSubtaskId, setPendingSubtaskId] = useState(null)
+  const [removingSubtask, setRemovingSubtask] = useState(null)
   // Aparte del error global del tablero: ese bloque llama a refresh(), que
   // recargaria todas las tareas del proyecto por un fallo puntual de la IA.
   const [detailError, setDetailError] = useState('')
+  const [notice, setNotice] = useState('')
   const originRef = useRef(null)
   const draggingTaskRef = useRef(null)
 
   // Buscar la tarea por id en cualquier columna
   function findTaskById(taskId) {
-    for (const s of TASK_STATUSES) {
-      const found = items[s.value].find((t) => t.id === taskId)
+    for (const c of BOARD_COLUMNS) {
+      const found = items[c.value].find((t) => t.id === taskId)
       if (found) return found
     }
     return null
   }
 
   useEffect(() => {
-    const next = emptyGroups()
-    tasks.forEach((t) => {
-      if (next[t.status]) next[t.status].push(t)
-    })
-    setItems(next)
+    setItems(groupTasks(tasks))
   }, [tasks])
+
+  // El aviso de movimiento bloqueado se oculta solo
+  useEffect(() => {
+    if (!notice) return
+    const timer = setTimeout(() => setNotice(''), 4500)
+    return () => clearTimeout(timer)
+  }, [notice])
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -83,10 +107,15 @@ export default function KanbanBoard({ projectId, project, members, myRole }) {
 
   function findContainer(id) {
     if (Object.prototype.hasOwnProperty.call(items, id)) return id
-    for (const s of TASK_STATUSES) {
-      if (items[s.value].some((t) => t.id === id)) return s.value
+    for (const c of BOARD_COLUMNS) {
+      if (items[c.value].some((t) => t.id === id)) return c.value
     }
     return null
+  }
+
+  // Ningún movimiento puede entrar o salir de la columna virtual
+  function isBlockedMove(from, to) {
+    return from !== to && (from === UNASSIGNED || to === UNASSIGNED)
   }
 
   function handleDragStart(event) {
@@ -102,6 +131,7 @@ export default function KanbanBoard({ projectId, project, members, myRole }) {
     const from = originRef.current || findContainer(active.id)
     const to = findContainer(overId)
     if (!from || !to || from === to) return
+    if (isBlockedMove(from, to)) return
 
     setItems((prev) => {
       const moved = prev[from].find((t) => t.id === active.id)
@@ -125,15 +155,33 @@ export default function KanbanBoard({ projectId, project, members, myRole }) {
       .finally(() => setDetailLoading(false))
   }
 
+  // Soltar fuera de una columna o cancelar con Escape: deshace la vista previa
+  // que handleDragOver aplicó sobre items
+  function handleDragCancel() {
+    originRef.current = null
+    draggingTaskRef.current = null
+    setItems(groupTasks(tasks))
+  }
+
   async function handleDragEnd(event) {
     const { active, over } = event
     const overId = over?.id
-    if (!overId) return
+    if (!overId) {
+      handleDragCancel()
+      return
+    }
 
     const from = originRef.current || findContainer(active.id)
     const to = findContainer(overId)
     originRef.current = null
     if (!from || !to) return
+
+    if (isBlockedMove(from, to)) {
+      draggingTaskRef.current = null
+      setNotice(from === UNASSIGNED ? MOVE_UNASSIGNED_MSG : DROP_UNASSIGNED_MSG)
+      setItems(groupTasks(tasks))
+      return
+    }
 
     if (from === to) {
       setItems((prev) => {
@@ -160,10 +208,34 @@ export default function KanbanBoard({ projectId, project, members, myRole }) {
     }
   }
 
+  // Replica el @RequireProjectRole(MEMBER, LEADER) del PATCH de tareas
+  const canAssign = myRole === 'member' || myRole === 'leader'
+
+  // Al asignar una tarea que estaba en "Sin asignar" arranca en Pendientes,
+  // aunque su estado real fuera otro. La asignación ya quedó guardada, así
+  // que un fallo aquí se muestra en el tablero en vez de relanzarse.
+  async function sendToPendingIfNeeded(wasUnassigned, updated) {
+    if (!wasUnassigned || !updated.assignee || updated.status === 'pending') return
+    try {
+      await moveTask(updated.taskNumber, 'pending')
+    } catch (err) {
+      setError(err.message)
+    }
+  }
+
+  // Asignación rápida desde el badge de la tarjeta. Si el PATCH falla, el
+  // error se relanza para que el popover lo muestre.
+  async function handleQuickAssign(task, assigneeId) {
+    const updated = await updateTask(task.taskNumber, { assigneeId })
+    await sendToPendingIfNeeded(!task.assignee, updated)
+  }
+
   const handleTaskSaved = async (payload) => {
     if (editingTask) {
+      const wasUnassigned = !editingTask.assignee
       const updated = await updateTask(editingTask.taskNumber, payload)
       setEditingTask(null)
+      await sendToPendingIfNeeded(wasUnassigned, updated)
       const fresh = await getTask(updated.taskNumber)
       setDetailTask(fresh)
     } else {
@@ -172,15 +244,12 @@ export default function KanbanBoard({ projectId, project, members, myRole }) {
     }
   }
 
+  // Sin try/catch: si falla, ConfirmDialog muestra el error dentro del modal
   const handleDelete = async () => {
-    try {
-      await deleteTask(deletingTask.taskNumber)
-      setDeletingTask(null)
-      setDetailNumber(null)
-      setDetailTask(null)
-    } catch (err) {
-      setError(err.message)
-    }
+    await deleteTask(deletingTask.taskNumber)
+    setDeletingTask(null)
+    setDetailNumber(null)
+    setDetailTask(null)
   }
 
   const handleCloseDetail = () => {
@@ -247,9 +316,14 @@ export default function KanbanBoard({ projectId, project, members, myRole }) {
     }
   }
 
-  async function handleRemoveSubtask(subtask) {
+  function handleRemoveSubtask(subtask) {
     if (!detailTask) return
-    if (!window.confirm(`¿Eliminar la subtarea "${subtask.title}"?`)) return
+    setRemovingSubtask(subtask)
+  }
+
+  // Si falla, el error se relanza para que ConfirmDialog lo muestre
+  async function confirmRemoveSubtask() {
+    const subtask = removingSubtask
     setPendingSubtaskId(subtask.id)
     setDetailError('')
     try {
@@ -264,8 +338,7 @@ export default function KanbanBoard({ projectId, project, members, myRole }) {
             }
           : prev
       )
-    } catch (err) {
-      setDetailError(err.message)
+      setRemovingSubtask(null)
     } finally {
       setPendingSubtaskId(null)
     }
@@ -274,13 +347,39 @@ export default function KanbanBoard({ projectId, project, members, myRole }) {
   return (
     <div className="kanban-page">
       <div className="kanban-header">
-        <span className="kanban-wip-total">
-          Límite WIP: {project?.wipLimit ?? '-'}
-        </span>
+        <p className="kanban-summary">
+          {loading
+            ? 'Cargando tareas…'
+            : `${tasks.length} ${tasks.length === 1 ? 'tarea' : 'tareas'} en el tablero`}
+        </p>
         <button className="btn btn-primary" onClick={() => setShowCreate(true)}>
           + Nueva tarea
         </button>
       </div>
+
+      {notice && (
+        <div className="kanban-notice" role="status">
+          <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+            <path
+              d="M10 3.2 17.4 16a.8.8 0 0 1-.7 1.2H3.3a.8.8 0 0 1-.7-1.2L10 3.2Z"
+              stroke="currentColor"
+              strokeWidth="1.6"
+              strokeLinejoin="round"
+            />
+            <path d="M10 8v3.8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+            <circle cx="10" cy="14.2" r="0.95" fill="currentColor" />
+          </svg>
+          <p>{notice}</p>
+          <button
+            type="button"
+            className="kanban-notice-close"
+            onClick={() => setNotice('')}
+            aria-label="Cerrar aviso"
+          >
+            ×
+          </button>
+        </div>
+      )}
 
       {error && (
         <div className="kanban-error">
@@ -291,24 +390,39 @@ export default function KanbanBoard({ projectId, project, members, myRole }) {
         </div>
       )}
 
-      {loading && <p className="loading">Cargando tareas...</p>}
-
-      {!loading && (
+      {loading ? (
+        <div className="kanban-columns" aria-busy="true">
+          {BOARD_COLUMNS.map((col) => (
+            <div key={col.value} className="kanban-column is-loading">
+              <div className="kanban-column-header">
+                <span className="kanban-column-title">{col.label}</span>
+              </div>
+              <div className="kanban-task-list">
+                <span className="skeleton kanban-skeleton-card" />
+                <span className="skeleton kanban-skeleton-card short" />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
         <DndContext
           sensors={sensors}
           collisionDetection={closestCorners}
           onDragStart={handleDragStart}
           onDragOver={handleDragOver}
           onDragEnd={handleDragEnd}
+          onDragCancel={handleDragCancel}
         >
           <div className="kanban-columns">
-            {TASK_STATUSES.map((col) => (
+            {BOARD_COLUMNS.map((col) => (
               <KanbanColumn
                 key={col.value}
                 col={col}
                 tasks={items[col.value] || []}
                 wipLimit={project?.wipLimit}
                 onTaskClick={handleOpenDetail}
+                members={canAssign ? members : null}
+                onQuickAssign={handleQuickAssign}
               />
             ))}
           </div>
@@ -352,10 +466,32 @@ export default function KanbanBoard({ projectId, project, members, myRole }) {
       )}
 
       {deletingTask && (
-        <DeleteTaskConfirm
-          task={deletingTask}
+        <ConfirmDialog
+          variant="danger"
+          title="Eliminar tarea"
+          message={
+            <p>
+              ¿Seguro que quieres eliminar la tarea{' '}
+              <strong>
+                #{deletingTask.taskNumber} · {deletingTask.title}
+              </strong>
+              ? Esta acción no se puede deshacer.
+            </p>
+          }
+          confirmText="Eliminar"
           onCancel={() => setDeletingTask(null)}
           onConfirm={handleDelete}
+        />
+      )}
+
+      {removingSubtask && (
+        <ConfirmDialog
+          variant="danger"
+          title="Eliminar subtarea"
+          message={<p>¿Eliminar la subtarea "{removingSubtask.title}"?</p>}
+          confirmText="Eliminar"
+          onCancel={() => setRemovingSubtask(null)}
+          onConfirm={confirmRemoveSubtask}
         />
       )}
     </div>
