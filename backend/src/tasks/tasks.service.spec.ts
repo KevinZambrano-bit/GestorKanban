@@ -13,9 +13,12 @@ import { Project } from '../projects/entities/project.entity';
 import { ProjectMember } from '../projects/entities/project-member.entity';
 import { User } from '../users/entities/user.entity';
 import { AiClientService } from '../ai-client/ai-client.service';
+import { MailService } from '../mail/mail.service';
+import { ConfigService } from '@nestjs/config';
 
 describe('TasksService', () => {
   let service: TasksService;
+  let mailService: jest.Mocked<MailService>;
   let taskRepository: jest.Mocked<Repository<Task>>;
   let subtaskRepository: jest.Mocked<Repository<Subtask>>;
   let projectRepository: jest.Mocked<Repository<Project>>;
@@ -68,6 +71,18 @@ describe('TasksService', () => {
             generateSubtasks: jest.fn(),
           },
         },
+        {
+          provide: MailService,
+          useValue: {
+            sendTaskAssignedEmail: jest.fn().mockResolvedValue({ sent: true }),
+          },
+        },
+        {
+          provide: ConfigService,
+          useValue: {
+            get: jest.fn(() => 'http://localhost:5173'),
+          },
+        },
       ],
     }).compile();
 
@@ -77,6 +92,7 @@ describe('TasksService', () => {
     projectRepository = module.get(getRepositoryToken(Project));
     memberRepository = module.get(getRepositoryToken(ProjectMember));
     userRepository = module.get(getRepositoryToken(User));
+    mailService = module.get(MailService);
   });
 
   afterEach(() => {

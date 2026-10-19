@@ -9,6 +9,9 @@ import Dashboard from "./pages/Dashboard";
 import Projects from "./pages/Projects";
 import ProjectDetail from "./pages/ProjectDetail";
 import OAuthCallback from "./pages/OAuthCallback";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
+import AcceptInvitation from "./pages/AcceptInvitation";
 import Profile from "./pages/Profile";
 import AdminPanel from "./pages/AdminPanel";
 import Forbidden from "./pages/Forbidden";
@@ -20,7 +23,14 @@ export default function App() {
       <Route element={<PublicRoute />}>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        {/* El token viaja en la URL, así que el enlace funciona con o sin
+            sesión iniciada: la pantalla de aceptación detecta cuál es el caso. */}
+        <Route path="/invitacion/:token" element={<AcceptInvitation />} />
       </Route>
+      {/* ResetPassword queda fuera de PublicRoute: con sesión activa el
+          formulario se muestra igualmente, pero nunca desplaza al dashboard. */}
+      <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/oauth/callback" element={<OAuthCallback />} />
       <Route element={<ProtectedRoute />}>
         <Route element={<AppLayout />}>

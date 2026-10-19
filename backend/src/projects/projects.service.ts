@@ -11,7 +11,6 @@ import { User } from '../users/entities/user.entity';
 import { Task, TaskStatus } from '../tasks/entities/task.entity';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
-import { InviteMemberDto } from './dto/invite-member.dto';
 
 @Injectable()
 export class ProjectsService {
@@ -187,42 +186,8 @@ export class ProjectsService {
     return { message: `Proyecto "${project.name}" eliminado correctamente` };
   }
 
-  // Invitar miembro por email (solo LEADER)
-  async inviteMember(
-    id: number,
-    inviteMemberDto: InviteMemberDto,
-    userId: number,
-  ): Promise<{ message: string }> {
-    await this.checkLeaderPermission(id, userId);
-
-    const project = await this.projectRepository.findOne({ where: { id } });
-    const user = await this.userRepository.findOne({
-      where: { email: inviteMemberDto.email },
-    });
-
-    if (!user)
-      throw new NotFoundException(
-        `Usuario con email ${inviteMemberDto.email} no encontrado`,
-      );
-
-    // Verificar si ya es miembro
-    const exists = await this.memberRepository.findOne({
-      where: { project: { id }, user: { id: user.id } },
-    });
-    if (exists)
-      throw new ForbiddenException('El usuario ya es miembro de este proyecto');
-
-    const member = this.memberRepository.create({
-      project,
-      user,
-      role: inviteMemberDto.role || ProjectRole.MEMBER,
-    });
-    await this.memberRepository.save(member);
-
-    return {
-      message: `${user.name} agregado como ${member.role} correctamente`,
-    };
-  }
+  // Nota: invitar por email (incluido el envío del correo y el soporte para
+  // invitados sin cuenta) vive en InvitationsService.
 
   // Configurar límite WIP (solo LEADER)
   async updateWipLimit(

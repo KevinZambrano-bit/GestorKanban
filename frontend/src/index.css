@@ -9,6 +9,17 @@
   --accent-bg: rgba(170, 59, 255, 0.1);
   --accent-border: rgba(170, 59, 255, 0.5);
   --social-bg: rgba(244, 243, 236, 0.5);
+  --danger: #dc2626;
+  --danger-bg: rgba(239, 68, 68, 0.12);
+  --danger-border: rgba(239, 68, 68, 0.3);
+  --success: #16a34a;
+  --success-bg: rgba(34, 197, 94, 0.12);
+  --success-border: rgba(34, 197, 94, 0.4);
+  --warning: #ca8a04;
+  --warning-bg: rgba(234, 179, 8, 0.15);
+  --warning-border: rgba(234, 179, 8, 0.4);
+  /* Paneles que se mantienen oscuros en ambos temas (p.ej. .auth-hero). */
+  --inverse-bg: #08060d;
   --shadow:
     rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
 
@@ -16,7 +27,7 @@
   --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
   --mono: ui-monospace, Consolas, monospace;
 
-  font: 16px/145% var(--sans);
+  font: 17px/145% var(--sans);
   letter-spacing: 0.1px;
   color-scheme: light;
   color: var(--text);
@@ -25,6 +36,36 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* --- Modo oscuro --- */
+/* Solo se redefinen tokens: las reglas de abajo leen variables, asi que el
+   tema entero cambia sin duplicar CSS. Landing.css añade sus propios overrides
+   para `.lp`, que ya se apoya en `data-theme`. */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --text: #a8a2b5;
+  --text-h: #f3f1f8;
+  --bg: #17161c;
+  --canvas: #0e0d12;
+  --border: #2c2a35;
+  --code-bg: #1f1e26;
+  --accent: #a855f7;
+  --accent-bg: rgba(168, 85, 247, 0.16);
+  --accent-border: rgba(168, 85, 247, 0.55);
+  --social-bg: rgba(255, 255, 255, 0.06);
+  --danger: #f87171;
+  --danger-bg: rgba(248, 113, 113, 0.14);
+  --danger-border: rgba(248, 113, 113, 0.35);
+  --success: #4ade80;
+  --success-bg: rgba(74, 222, 128, 0.14);
+  --success-border: rgba(74, 222, 128, 0.4);
+  --warning: #fbbf24;
+  --warning-bg: rgba(251, 191, 36, 0.16);
+  --warning-border: rgba(251, 191, 36, 0.4);
+  --shadow:
+    rgba(0, 0, 0, 0.55) 0 10px 15px -3px, rgba(0, 0, 0, 0.4) 0 4px 6px -2px;
 }
 
 body {
@@ -45,8 +86,8 @@ h1, h2 {
   letter-spacing: -0.3px;
 }
 
-h1 { font-size: 28px; margin: 0 0 4px; }
-h2 { font-size: 20px; line-height: 128%; margin: 0 0 8px; }
+h1 { font-size: 29px; margin: 0 0 4px; }
+h2 { font-size: 21px; line-height: 128%; margin: 0 0 8px; }
 p { margin: 0; }
 
 code, .counter {
@@ -56,7 +97,7 @@ code, .counter {
   color: var(--text-h);
 }
 code {
-  font-size: 15px;
+  font-size: 16px;
   line-height: 135%;
   padding: 4px 8px;
   background: var(--code-bg);
@@ -83,7 +124,7 @@ code {
   align-items: center;
   gap: 8px;
   font-weight: 600;
-  font-size: 15px;
+  font-size: 16px;
   color: var(--text-h);
   text-decoration: none;
 }
@@ -96,7 +137,7 @@ code {
 .app-nav-link {
   padding: 6px 10px;
   border-radius: 6px;
-  font-size: 14px;
+  font-size: 15px;
   color: var(--text);
   text-decoration: none;
 }
@@ -110,7 +151,7 @@ code {
   gap: 8px;
 }
 .app-user-name {
-  font-size: 14px;
+  font-size: 15px;
   color: var(--text-h);
   font-weight: 500;
 }
@@ -129,8 +170,8 @@ h1, h2 {
   letter-spacing: -0.3px;
 }
 
-h1 { font-size: 28px; margin: 0 0 4px; }
-h2 { font-size: 20px; line-height: 128%; margin: 0 0 8px; }
+h1 { font-size: 29px; margin: 0 0 4px; }
+h2 { font-size: 21px; line-height: 128%; margin: 0 0 8px; }
 p { margin: 0; }
 
 code, .counter {
@@ -140,7 +181,7 @@ code, .counter {
   color: var(--text-h);
 }
 code {
-  font-size: 15px;
+  font-size: 16px;
   line-height: 135%;
   padding: 4px 8px;
   background: var(--code-bg);
@@ -167,7 +208,7 @@ code {
   align-items: center;
   gap: 8px;
   font-weight: 600;
-  font-size: 15px;
+  font-size: 16px;
   color: var(--text-h);
   text-decoration: none;
 }
@@ -180,7 +221,7 @@ code {
 .app-nav-link {
   padding: 6px 10px;
   border-radius: 6px;
-  font-size: 14px;
+  font-size: 15px;
   color: var(--text);
   text-decoration: none;
 }
@@ -194,7 +235,7 @@ code {
   gap: 8px;
 }
 .app-user-name {
-  font-size: 14px;
+  font-size: 15px;
   color: var(--text-h);
   font-weight: 500;
 }
@@ -205,6 +246,10 @@ code {
   margin: 0 auto;
   box-sizing: border-box;
 }
+/* El detalle de proyecto (tablero) usa todo el ancho de la ventana. */
+.app-content--wide {
+  max-width: none;
+}
 
 h1,
 h2 {
@@ -214,21 +259,21 @@ h2 {
 }
 
 h1 {
-  font-size: 56px;
+  font-size: 57px;
   letter-spacing: -1.68px;
   margin: 32px 0;
   @media (max-width: 1024px) {
-    font-size: 36px;
+    font-size: 37px;
     margin: 20px 0;
   }
 }
 h2 {
-  font-size: 24px;
+  font-size: 25px;
   line-height: 118%;
   letter-spacing: -0.24px;
   margin: 0 0 8px;
   @media (max-width: 1024px) {
-    font-size: 20px;
+    font-size: 21px;
   }
 }
 p {
@@ -244,7 +289,7 @@ code,
 }
 
 code {
-  font-size: 15px;
+  font-size: 16px;
   line-height: 135%;
   padding: 4px 8px;
   background: var(--code-bg);
@@ -262,7 +307,7 @@ code {
 }
 
 .auth-hero {
-  background: var(--text-h);
+  background: var(--inverse-bg);
   color: #fff;
   padding: 56px;
   display: flex;
@@ -275,11 +320,11 @@ code {
   align-items: center;
   gap: 8px;
   font-weight: 600;
-  font-size: 15px;
+  font-size: 16px;
   color: var(--accent);
 }
 .auth-hero-title {
-  font-size: 34px;
+  font-size: 35px;
   line-height: 1.2;
   font-weight: 600;
   color: #fff;
@@ -288,7 +333,7 @@ code {
 }
 .auth-hero-sub {
   color: rgba(255, 255, 255, 0.6);
-  font-size: 15px;
+  font-size: 16px;
   max-width: 380px;
 }
 
@@ -309,7 +354,7 @@ code {
   gap: 8px;
 }
 .mini-col-title {
-  font-size: 10px;
+  font-size: 11px;
   color: rgba(255, 255, 255, 0.45);
   font-weight: 500;
 }
@@ -338,14 +383,40 @@ code {
   padding: 40px 24px;
 }
 .auth-form-card { width: 100%; max-width: 360px; }
-.auth-form-title { font-size: 26px; margin-bottom: 4px; }
-.auth-form-sub { color: var(--text); font-size: 14px; margin-bottom: 28px; }
+.auth-form-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 22px;
+}
+.auth-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px 6px 9px;
+  margin-left: -9px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text);
+  text-decoration: none;
+  transition: color 0.15s, background-color 0.15s;
+}
+.auth-back:hover {
+  color: var(--text-h);
+  background: var(--accent-bg);
+}
+.auth-back svg { transition: transform 0.15s; }
+.auth-back:hover svg { transform: translateX(-2px); }
+.auth-form-title { font-size: 27px; margin-bottom: 4px; }
+.auth-form-sub { color: var(--text); font-size: 15px; margin-bottom: 28px; }
 .auth-form-card form { display: flex; flex-direction: column; gap: 16px; }
 .auth-form-card label {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  font-size: 14px;
+  font-size: 15px;
   color: var(--text);
   text-align: left;
 }
@@ -353,7 +424,7 @@ code {
   padding: 11px 12px;
   border: 1px solid var(--border);
   border-radius: 8px;
-  font-size: 15px;
+  font-size: 16px;
   background: var(--bg);
   color: var(--text-h);
   transition: border-color 0.15s, box-shadow 0.15s;
@@ -383,7 +454,7 @@ code {
 .btn-block {
   width: 100%;
   padding: 11px;
-  font-size: 15px;
+  font-size: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -445,7 +516,7 @@ code {
   align-items: center;
   gap: 10px;
   color: var(--text);
-  font-size: 13px;
+  font-size: 14px;
   margin: 20px 0;
 }
 .auth-divider::before,
@@ -456,7 +527,7 @@ code {
   background: var(--border);
 }
 .btn-google { display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; }
-.auth-switch { margin-top: 20px; font-size: 14px; color: var(--text); text-align: center; }
+.auth-switch { margin-top: 20px; font-size: 15px; color: var(--text); text-align: center; }
 .auth-switch a { color: var(--accent); font-weight: 500; }
 
 .centered-page {
@@ -466,6 +537,8 @@ code {
   justify-content: center;
   flex-direction: column;
   gap: 12px;
+  padding: 24px 16px;
+  box-sizing: border-box;
 }
 
 /* --- General utils --- */
@@ -478,17 +551,17 @@ code {
 .error {
   padding: 8px 12px;
   border-radius: 6px;
-  background: rgba(239, 68, 68, 0.12);
-  color: #dc2626;
-  font-size: 14px;
+  background: var(--danger-bg);
+  color: var(--danger);
+  font-size: 15px;
 }
 
 .success {
   padding: 8px 12px;
   border-radius: 6px;
-  background: rgba(34, 197, 94, 0.12);
-  color: #16a34a;
-  font-size: 14px;
+  background: var(--success-bg);
+  color: var(--success);
+  font-size: 15px;
 }
 
 /* --- Buttons --- */
@@ -498,7 +571,7 @@ code {
   border-radius: 6px;
   background: var(--bg);
   color: var(--text-h);
-  font-size: 14px;
+  font-size: 15px;
   cursor: pointer;
   transition: border-color 0.2s;
 }
@@ -522,16 +595,16 @@ code {
   cursor: not-allowed;
 }
 .btn-danger {
-  color: #dc2626;
-  border-color: rgba(239, 68, 68, 0.3);
+  color: var(--danger);
+  border-color: var(--danger-border);
 }
 .btn-danger:hover {
-  background: rgba(239, 68, 68, 0.08);
-  border-color: #dc2626;
+  background: var(--danger-bg);
+  border-color: var(--danger);
 }
 .btn-sm {
   padding: 4px 10px;
-  font-size: 13px;
+  font-size: 14px;
 }
 .btn-back {
   border: none;
@@ -540,10 +613,36 @@ code {
   cursor: pointer;
   padding: 0;
   margin-bottom: 16px;
-  font-size: 14px;
+  font-size: 15px;
 }
 .btn-back:hover {
   color: var(--accent);
+}
+
+/* --- Theme toggle --- */
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background-color 0.15s;
+}
+.theme-toggle:hover {
+  color: var(--text-h);
+  border-color: var(--accent-border);
+  background: var(--accent-bg);
+}
+.theme-toggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 /* --- Badge --- */
@@ -551,7 +650,7 @@ code {
   display: inline-block;
   padding: 2px 8px;
   border-radius: 10px;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
 }
 .badge-leader {
@@ -594,12 +693,12 @@ code {
 }
 .dash-hero-text h1 {
   margin: 0;
-  font-size: 26px;
+  font-size: 27px;
   line-height: 1.2;
 }
 .dash-hero-sub {
   margin-top: 4px;
-  font-size: 15px;
+  font-size: 16px;
 }
 .dash-actions {
   display: flex;
@@ -636,7 +735,7 @@ code {
   border-left: 1px solid var(--border);
 }
 .dash-stat-value {
-  font-size: 32px;
+  font-size: 33px;
   font-weight: 600;
   line-height: 1.1;
   color: var(--text-h);
@@ -644,7 +743,7 @@ code {
   letter-spacing: -0.5px;
 }
 .dash-stat-label {
-  font-size: 13px;
+  font-size: 14px;
 }
 .dash-rolebar {
   grid-column: 1 / -1;
@@ -671,7 +770,7 @@ code {
   transform-origin: left;
 }
 .dash-rolebar-caption {
-  font-size: 13px;
+  font-size: 14px;
   white-space: nowrap;
 }
 @keyframes dash-grow {
@@ -689,10 +788,10 @@ code {
 }
 .dash-section-head h2 {
   margin: 0;
-  font-size: 18px;
+  font-size: 19px;
 }
 .dash-more {
-  font-size: 14px;
+  font-size: 15px;
   color: var(--accent);
   text-decoration: none;
 }
@@ -741,7 +840,7 @@ a.dash-card:hover {
 }
 .dash-card-head h3 {
   margin: 0;
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 600;
   color: var(--text-h);
   line-height: 1.3;
@@ -751,7 +850,7 @@ a.dash-card:hover {
   flex-shrink: 0;
 }
 .dash-card-desc {
-  font-size: 14px;
+  font-size: 15px;
   flex: 1;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -767,7 +866,7 @@ a.dash-card:hover {
   display: flex;
   flex-wrap: wrap;
   gap: 4px 14px;
-  font-size: 12px;
+  font-size: 13px;
   padding-top: 10px;
   border-top: 1px solid var(--border);
 }
@@ -814,13 +913,13 @@ a.dash-card:hover {
 }
 .dash-empty h3 {
   margin: 0;
-  font-size: 18px;
+  font-size: 19px;
   font-weight: 600;
   color: var(--text-h);
 }
 .dash-empty p {
   max-width: 44ch;
-  font-size: 14px;
+  font-size: 15px;
   margin-bottom: 8px;
 }
 .dash-error {
@@ -885,11 +984,11 @@ a.dash-card:hover {
 }
 .projects-header h1 {
   margin: 0;
-  font-size: 28px;
+  font-size: 29px;
 }
 .projects-sub {
   margin-top: 4px;
-  font-size: 15px;
+  font-size: 16px;
 }
 
 /* Filtro por rol */
@@ -913,7 +1012,7 @@ a.dash-card:hover {
   border-radius: 6px;
   background: none;
   color: var(--text);
-  font-size: 14px;
+  font-size: 15px;
   white-space: nowrap;
   cursor: pointer;
   transition: background-color 0.15s, color 0.15s;
@@ -928,7 +1027,7 @@ a.dash-card:hover {
   font-weight: 500;
 }
 .projects-filter-count {
-  font-size: 12px;
+  font-size: 13px;
   font-variant-numeric: tabular-nums;
   opacity: 0.8;
 }
@@ -987,7 +1086,7 @@ a.project-card:hover {
 }
 .project-card-header h2 {
   margin: 0;
-  font-size: 18px;
+  font-size: 19px;
   font-weight: 600;
   line-height: 1.3;
   overflow-wrap: anywhere;
@@ -997,7 +1096,7 @@ a.project-card:hover {
   margin-top: 1px;
 }
 .project-card-desc {
-  font-size: 14px;
+  font-size: 15px;
   line-height: 1.5;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -1042,7 +1141,7 @@ a.project-card:hover {
   box-sizing: border-box;
 }
 .project-progress-label {
-  font-size: 12px;
+  font-size: 13px;
 }
 
 /* Pie: miembros y etiquetas */
@@ -1054,7 +1153,7 @@ a.project-card:hover {
   flex-wrap: wrap;
   padding-top: 12px;
   border-top: 1px solid var(--border);
-  font-size: 13px;
+  font-size: 14px;
 }
 .project-members {
   display: flex;
@@ -1083,7 +1182,7 @@ a.project-card:hover {
   place-items: center;
   background: var(--canvas);
   color: var(--text-h);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
 }
 .project-tags {
@@ -1097,7 +1196,7 @@ a.project-card:hover {
   padding: 2px 8px;
   border: 1px solid var(--border);
   border-radius: 10px;
-  font-size: 12px;
+  font-size: 13px;
   white-space: nowrap;
 }
 
@@ -1109,7 +1208,7 @@ a.project-card:hover {
   border: 1px dashed var(--border);
   background: none;
   font: inherit;
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 500;
   color: var(--text);
   transition: border-color 0.2s, color 0.2s, background-color 0.2s;
@@ -1126,7 +1225,7 @@ a.project-card:hover {
   height: 40px;
   border-radius: 50%;
   border: 1px dashed currentColor;
-  font-size: 22px;
+  font-size: 23px;
   line-height: 1;
 }
 
@@ -1169,12 +1268,12 @@ a.project-card:hover {
 }
 .projects-empty h2 {
   margin: 0;
-  font-size: 20px;
+  font-size: 21px;
   font-weight: 600;
 }
 .projects-empty p {
   max-width: 46ch;
-  font-size: 14px;
+  font-size: 15px;
   line-height: 1.5;
   margin-bottom: 6px;
 }
@@ -1207,7 +1306,7 @@ a.project-card:hover {
 }
 .empty-state p {
   margin-bottom: 16px;
-  font-size: 16px;
+  font-size: 17px;
 }
 
 /* --- Modal --- */
@@ -1233,7 +1332,7 @@ a.project-card:hover {
 }
 .modal h2 {
   margin: 0 0 20px;
-  font-size: 22px;
+  font-size: 23px;
 }
 .modal form {
   display: flex;
@@ -1244,7 +1343,7 @@ a.project-card:hover {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  font-size: 14px;
+  font-size: 15px;
   color: var(--text);
 }
 .modal input[type="text"],
@@ -1256,7 +1355,7 @@ a.project-card:hover {
   padding: 8px 10px;
   border: 1px solid var(--border);
   border-radius: 6px;
-  font-size: 15px;
+  font-size: 16px;
   background: var(--bg);
   color: var(--text-h);
   font-family: var(--sans);
@@ -1287,7 +1386,7 @@ a.project-card:hover {
 
 /* --- Project detail --- */
 .project-detail-page {
-  padding: 32px;
+  padding: 24px 28px 32px;
   text-align: left;
 }
 .project-detail-header {
@@ -1299,11 +1398,11 @@ a.project-card:hover {
 }
 .project-detail-header h1 {
   margin: 0 0 4px;
-  font-size: 28px;
+  font-size: 29px;
 }
 .project-detail-desc {
   color: var(--text);
-  font-size: 15px;
+  font-size: 16px;
 }
 .project-detail-actions {
   display: flex;
@@ -1311,7 +1410,7 @@ a.project-card:hover {
   flex-shrink: 0;
 }
 
-/* --- Tabs --- */
+/* --- Tabs en el detalle de proyecto --- */
 .tabs {
   display: flex;
   gap: 4px;
@@ -1324,7 +1423,7 @@ a.project-card:hover {
   background: none;
   color: var(--text);
   cursor: pointer;
-  font-size: 14px;
+  font-size: 15px;
   border-bottom: 2px solid transparent;
   margin-bottom: -1px;
 }
@@ -1336,6 +1435,27 @@ a.project-card:hover {
   border-bottom-color: var(--accent);
 }
 
+/* Pestañas alojadas en la barra principal (portal de .app-header-tabs) */
+.app-header-tabs {
+  display: flex;
+  align-items: stretch;
+  margin-left: 4px;
+  padding-left: 4px;
+}
+.app-header-tabs:empty {
+  display: none;
+}
+.header-tabs {
+  display: flex;
+  align-items: stretch;
+  gap: 2px;
+}
+.header-tabs .tab {
+  padding: 6px 12px;
+  margin-bottom: 0;
+  font-size: 16px;
+}
+
 /* --- Project info --- */
 .project-info {
   display: flex;
@@ -1345,7 +1465,7 @@ a.project-card:hover {
 .info-row {
   display: flex;
   gap: 8px;
-  font-size: 15px;
+  font-size: 16px;
 }
 .info-label {
   color: var(--text);
@@ -1370,7 +1490,7 @@ a.project-card:hover {
   padding: 8px 10px;
   border: 1px solid var(--border);
   border-radius: 6px;
-  font-size: 14px;
+  font-size: 15px;
   background: var(--bg);
   color: var(--text-h);
 }
@@ -1378,7 +1498,7 @@ a.project-card:hover {
   padding: 8px 10px;
   border: 1px solid var(--border);
   border-radius: 6px;
-  font-size: 14px;
+  font-size: 15px;
   background: var(--bg);
   color: var(--text-h);
 }
@@ -1404,11 +1524,89 @@ a.project-card:hover {
 .member-name {
   font-weight: 500;
   color: var(--text-h);
-  font-size: 14px;
+  font-size: 15px;
 }
 .member-email {
   color: var(--text);
+  font-size: 14px;
+}
+
+/* --- Invitaciones pendientes --- */
+.invite-pending {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px;
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+}
+.invite-pending-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-h);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* --- Pantalla de aceptar invitación --- */
+.invite-card {
+  width: 100%;
+  max-width: 460px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 32px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  text-align: left;
+}
+.invite-kicker {
+  margin: 0;
   font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--accent);
+}
+.invite-title {
+  margin: 0;
+  font-size: 25px;
+  font-weight: 700;
+  letter-spacing: -0.4px;
+  color: var(--text-h);
+}
+.invite-text {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--text);
+}
+.invite-hint {
+  padding: 10px 12px;
+  background: rgba(168, 85, 247, 0.08);
+  border-radius: 8px;
+}
+.invite-avatar {
+  display: inline-flex;
+  vertical-align: middle;
+  margin-left: 4px;
+}
+.invite-avatar img {
+  border-radius: 50%;
+}
+.auth-notice {
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: rgba(168, 85, 247, 0.08);
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--text);
+}
+.auth-notice p {
+  margin: 0;
 }
 
 /* --- WIP section --- */
@@ -1422,14 +1620,14 @@ a.project-card:hover {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  font-size: 14px;
+  font-size: 15px;
   color: var(--text);
 }
 .wip-section input {
   padding: 8px 10px;
   border: 1px solid var(--border);
   border-radius: 6px;
-  font-size: 15px;
+  font-size: 16px;
   background: var(--bg);
   color: var(--text-h);
 }
@@ -1451,7 +1649,7 @@ a.project-card:hover {
   gap: 8px;
 }
 .kanban-summary {
-  font-size: 14px;
+  font-size: 16px;
   color: var(--text);
 }
 .kanban-error {
@@ -1470,23 +1668,23 @@ a.project-card:hover {
   align-items: center;
   gap: 10px;
   padding: 10px 12px 10px 14px;
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  border-left: 3px solid #dc2626;
+  border: 1px solid var(--danger-border);
+  border-left: 3px solid var(--danger);
   border-radius: 8px;
   background: var(--bg);
-  color: #dc2626;
+  color: var(--danger);
   animation: kanban-notice-in 0.2s ease-out;
 }
 .kanban-notice p {
   flex: 1;
-  font-size: 14px;
+  font-size: 15px;
   color: var(--text-h);
 }
 .kanban-notice-close {
   border: none;
   background: none;
   color: var(--text);
-  font-size: 20px;
+  font-size: 21px;
   line-height: 1;
   padding: 2px 6px;
   border-radius: 4px;
@@ -1503,7 +1701,7 @@ a.project-card:hover {
 /* Columnas */
 .kanban-columns {
   display: grid;
-  grid-template-columns: repeat(4, minmax(230px, 1fr));
+  grid-template-columns: repeat(4, minmax(260px, 1fr));
   gap: 12px;
   align-items: start;
   overflow-x: auto;
@@ -1560,7 +1758,7 @@ a.project-card:hover {
 .kanban-column-title {
   flex: 1;
   margin: 0;
-  font-size: 14px;
+  font-size: 17px;
   font-weight: 600;
   color: var(--text-h);
 }
@@ -1570,20 +1768,20 @@ a.project-card:hover {
   border-radius: 10px;
   background: var(--bg);
   border: 1px solid var(--border);
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 600;
   text-align: center;
   color: var(--text-h);
   font-variant-numeric: tabular-nums;
 }
 .kanban-column-count.is-full {
-  background: rgba(234, 179, 8, 0.15);
-  border-color: rgba(234, 179, 8, 0.4);
-  color: #ca8a04;
+  background: var(--warning-bg);
+  border-color: var(--warning-border);
+  color: var(--warning);
 }
 .kanban-column-note {
   margin: -4px 4px 0;
-  font-size: 12px;
+  font-size: 14px;
   color: var(--text);
 }
 .kanban-wip {
@@ -1607,7 +1805,7 @@ a.project-card:hover {
   transition: width 0.3s ease;
 }
 .kanban-wip-label {
-  font-size: 12px;
+  font-size: 14px;
   color: var(--text);
   white-space: nowrap;
 }
@@ -1626,7 +1824,7 @@ a.project-card:hover {
   padding: 14px;
   border: 1px dashed var(--border);
   border-radius: 8px;
-  font-size: 13px;
+  font-size: 15px;
   color: var(--text);
   text-align: center;
 }
@@ -1635,19 +1833,19 @@ a.project-card:hover {
   color: var(--accent);
 }
 .kanban-column-blocked .kanban-empty {
-  border-color: rgba(239, 68, 68, 0.45);
-  color: #dc2626;
+  border-color: var(--danger-border);
+  color: var(--danger);
 }
 
 /* Tarjetas */
 .kanban-task-card {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
   background: var(--bg);
   border: 1px solid var(--border);
   border-radius: 8px;
-  padding: 12px;
+  padding: 14px;
   cursor: grab;
   text-align: left;
   touch-action: manipulation;
@@ -1683,13 +1881,13 @@ a.project-card:hover {
   gap: 8px;
 }
 .kanban-task-num {
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 600;
   color: var(--text);
   font-variant-numeric: tabular-nums;
 }
 .kanban-task-status {
-  font-size: 11px;
+  font-size: 13px;
   color: var(--text);
   padding: 0 6px;
   border: 1px solid var(--border);
@@ -1697,15 +1895,15 @@ a.project-card:hover {
 }
 .kanban-task-title {
   margin: 0;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
   line-height: 1.35;
   color: var(--text-h);
   overflow-wrap: anywhere;
 }
 .kanban-task-desc {
-  font-size: 13px;
-  line-height: 1.45;
+  font-size: 15px;
+  line-height: 1.5;
   color: var(--text);
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -1721,7 +1919,7 @@ a.project-card:hover {
   margin-top: 4px;
   padding-top: 8px;
   border-top: 1px solid var(--border);
-  font-size: 12px;
+  font-size: 14px;
   color: var(--text);
 }
 .kanban-assignee {
@@ -1745,9 +1943,9 @@ a.project-card:hover {
 .kanban-unassigned-badge {
   padding: 1px 8px;
   border-radius: 10px;
-  border: 1px dashed rgba(239, 68, 68, 0.5);
-  background: rgba(239, 68, 68, 0.06);
-  color: #dc2626;
+  border: 1px dashed var(--danger-border);
+  background: var(--danger-bg);
+  color: var(--danger);
   font-weight: 500;
 }
 /* Asignación rápida desde el badge "Sin asignar" */
@@ -1756,7 +1954,7 @@ a.project-card:hover {
   align-items: center;
   gap: 5px;
   font: inherit;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
   cursor: pointer;
   transition: background-color 0.15s, border-color 0.15s, color 0.15s;
@@ -1786,7 +1984,7 @@ a.project-card:hover {
 }
 .quick-assign-heading {
   padding: 6px 8px 4px;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--text);
 }
@@ -1807,7 +2005,7 @@ a.project-card:hover {
   border-radius: 6px;
   background: none;
   font: inherit;
-  font-size: 14px;
+  font-size: 15px;
   color: var(--text-h);
   text-align: left;
   cursor: pointer;
@@ -1839,16 +2037,16 @@ a.project-card:hover {
   white-space: nowrap;
 }
 .quick-assign-role {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--accent);
 }
 .quick-assign-empty {
   padding: 8px;
-  font-size: 13px;
+  font-size: 14px;
 }
 .quick-assign-error {
   margin: 6px 2px 2px;
-  font-size: 13px;
+  font-size: 14px;
 }
 @keyframes quick-assign-in {
   from { opacity: 0; transform: translateY(-4px); }
@@ -1866,7 +2064,7 @@ a.project-card:hover {
   font-variant-numeric: tabular-nums;
 }
 .kanban-date.is-overdue {
-  color: #dc2626;
+  color: var(--danger);
   font-weight: 500;
 }
 .kanban-skeleton-card {
@@ -1929,7 +2127,7 @@ a.project-card:hover {
 }
 .task-detail-header h2 {
   margin: 0;
-  font-size: 20px;
+  font-size: 21px;
   flex: 1;
 }
 .task-detail-body {
@@ -1944,14 +2142,14 @@ a.project-card:hover {
   border: 1px solid var(--border);
 }
 .badge-status-in_progress {
-  background: rgba(234, 179, 8, 0.15);
-  color: #ca8a04;
-  border: 1px solid rgba(234, 179, 8, 0.4);
+  background: var(--warning-bg);
+  color: var(--warning);
+  border: 1px solid var(--warning-border);
 }
 .badge-status-done {
-  background: rgba(34, 197, 94, 0.12);
-  color: #16a34a;
-  border: 1px solid rgba(34, 197, 94, 0.4);
+  background: var(--success-bg);
+  color: var(--success);
+  border: 1px solid var(--success-border);
 }
 
 .avatar-sm {
@@ -1988,7 +2186,7 @@ a.project-card:hover {
   align-items: center;
   gap: 10px;
   color: var(--text);
-  font-size: 13px;
+  font-size: 14px;
   margin: 4px 0;
 }
 .auth-divider::before,
@@ -2022,7 +2220,7 @@ a.project-card:hover {
   margin-bottom: 10px;
 }
 .task-detail-hint {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--text);
   margin: 4px 0 0;
 }
@@ -2115,7 +2313,7 @@ a.project-card:hover {
   flex-shrink: 0;
 }
 .subtask-title {
-  font-size: 14px;
+  font-size: 15px;
   color: var(--text-h);
   overflow-wrap: anywhere;
 }
@@ -2130,7 +2328,7 @@ a.project-card:hover {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  font-size: 16px;
+  font-size: 17px;
   line-height: 1;
   flex-shrink: 0;
 }
@@ -2139,7 +2337,7 @@ a.project-card:hover {
   color: var(--accent);
 }
 .subtask-empty {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--text);
   margin: 10px 0 0;
 }
@@ -2151,7 +2349,7 @@ a.project-card:hover {
 }
 .subtask-confirm p {
   margin: 0 0 10px;
-  font-size: 14px;
+  font-size: 15px;
   color: var(--text-h);
 }
 .subtask-confirm-actions {
@@ -2183,13 +2381,13 @@ a.project-card:hover {
 }
 .admin-sub {
   color: var(--text);
-  font-size: 14px;
+  font-size: 15px;
 }
 .admin-section {
   margin-bottom: 36px;
 }
 .admin-section > h2 {
-  font-size: 18px;
+  font-size: 19px;
   margin-bottom: 12px;
 }
 .admin-section > .error,
@@ -2223,11 +2421,11 @@ a.project-card:hover {
   border-color: var(--accent-border);
 }
 .admin-kpi-label {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--text);
 }
 .admin-kpi-value {
-  font-size: 32px;
+  font-size: 33px;
   font-weight: 600;
   line-height: 1.1;
   color: var(--text-h);
@@ -2249,11 +2447,11 @@ a.project-card:hover {
 .admin-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 14px;
+  font-size: 15px;
 }
 .admin-table th {
   text-align: left;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
   color: var(--text);
   padding: 10px 16px;
@@ -2289,7 +2487,7 @@ a.project-card:hover {
 }
 .admin-you {
   margin-left: 6px;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 400;
   color: var(--text);
 }
@@ -2307,7 +2505,7 @@ a.project-card:hover {
   border-radius: 6px;
   background: var(--bg);
   color: var(--text-h);
-  font-size: 14px;
+  font-size: 15px;
 }
 .admin-role-cell select:focus {
   outline: none;
@@ -2354,19 +2552,19 @@ a.project-card:hover {
   color: var(--accent);
 }
 .confirm-danger .confirm-icon {
-  background: rgba(239, 68, 68, 0.1);
-  color: #dc2626;
+  background: var(--danger-bg);
+  color: var(--danger);
 }
 .confirm-body {
   min-width: 0;
 }
 .confirm-body h2 {
   margin: 8px 0 6px;
-  font-size: 18px;
+  font-size: 19px;
   font-weight: 600;
 }
 .confirm-message {
-  font-size: 14px;
+  font-size: 15px;
   line-height: 1.5;
   overflow-wrap: anywhere;
 }
@@ -2389,7 +2587,7 @@ a.project-card:hover {
   outline-offset: 2px;
 }
 .confirm-danger .confirm-actions .btn:focus-visible {
-  outline-color: #dc2626;
+  outline-color: var(--danger);
 }
 .btn-danger-solid {
   background: #dc2626;
@@ -2443,7 +2641,7 @@ a.project-card:hover {
 }
 .profile-title {
   margin: 0 0 16px;
-  font-size: 28px;
+  font-size: 29px;
 }
 .profile-card {
   background: var(--bg);
@@ -2474,13 +2672,13 @@ a.project-card:hover {
 }
 .profile-name {
   margin: 0;
-  font-size: 22px;
+  font-size: 23px;
   font-weight: 600;
   line-height: 1.25;
   overflow-wrap: anywhere;
 }
 .profile-email {
-  font-size: 14px;
+  font-size: 15px;
   overflow-wrap: anywhere;
 }
 .profile-form {
@@ -2491,7 +2689,7 @@ a.project-card:hover {
 }
 .profile-section-title {
   margin: 0;
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 600;
   color: var(--text-h);
 }
@@ -2501,7 +2699,7 @@ a.project-card:hover {
   gap: 6px;
 }
 .profile-field label {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 500;
   color: var(--text-h);
 }
@@ -2514,7 +2712,7 @@ a.project-card:hover {
   background: var(--bg);
   color: var(--text-h);
   font: inherit;
-  font-size: 15px;
+  font-size: 16px;
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 .profile-field input:hover:not([readonly]) {
@@ -2547,7 +2745,7 @@ a.project-card:hover {
   pointer-events: none;
 }
 .profile-hint {
-  font-size: 12px;
+  font-size: 13px;
 }
 .profile-msg {
   margin: 0;

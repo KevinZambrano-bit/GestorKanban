@@ -1,3 +1,6 @@
+import { Link } from 'react-router-dom'
+import ThemeToggle from '../ThemeToggle'
+
 export default function AuthLayout({ title, subtitle, children }) {
   return (
     <div className="auth-shell">
@@ -37,6 +40,17 @@ export default function AuthLayout({ title, subtitle, children }) {
 
       <main className="auth-form-panel">
         <div className="auth-form-card">
+          <div className="auth-form-top">
+            <Link className="auth-back" to="/">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M19 12H5M12 19l-7-7 7-7" />
+              </svg>
+              Volver al inicio
+            </Link>
+
+            <ThemeToggle />
+          </div>
+
           <h2 className="auth-form-title">{title}</h2>
           {subtitle && <p className="auth-form-sub">{subtitle}</p>}
           {children}

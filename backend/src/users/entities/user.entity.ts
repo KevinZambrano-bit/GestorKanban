@@ -10,6 +10,8 @@ import { Exclude } from 'class-transformer';
 import { Project } from '../../projects/entities/project.entity';
 import { Task } from '../../tasks/entities/task.entity';
 import { ProjectMember } from '../../projects/entities/project-member.entity';
+import { ProjectInvitation } from '../../projects/entities/project-invitation.entity';
+import { PasswordResetToken } from '../../auth/entities/password-reset-token.entity';
 import { Role } from '../../roles/entities/role.entity';
 
 @Entity('users')
@@ -48,4 +50,10 @@ export class User {
 
   @OneToMany(() => Task, (t) => t.assignee)
   tasks: Task[];
+
+  @OneToMany(() => ProjectInvitation, (i) => i.invitedBy)
+  sentInvitations: ProjectInvitation[];
+
+  @OneToMany(() => PasswordResetToken, (t) => t.user)
+  resetTokens: PasswordResetToken[];
 }

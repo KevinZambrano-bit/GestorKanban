@@ -1,17 +1,20 @@
-import { useState, useEffect, useCallback } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useState, useEffect, useCallback, useMemo, useRef, useContext } from "react";
+import { createPortal } from "react-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import api from "../services/api";
 import useAuth from "../hooks/useAuth";
 import { getMyRole } from "../utils/project";
 import { CreateProjectModal } from "./Projects";
 import KanbanBoard from "../components/board/KanbanBoard";
 import RequireProjectRole from "../components/RequireProjectRole";
+import HeaderTabsContext from "../context/HeaderTabsContext";
 import { getAvatarUrl } from "../utils/avatar";
 import ConfirmDialog from "../components/ConfirmDialog";
 
 export default function ProjectDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const [project, setProject] = useState(null);
   const [members, setMembers] = useState([]);
@@ -20,6 +23,27 @@ export default function ProjectDetail() {
   const [editing, setEditing] = useState(false);
   const [tab, setTab] = useState("board");
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+
+  // El correo de asignación enlaza a /projects/:id?tarea=<número>. Ese
+  // parámetro se consume al abrir el tablero y se descarta de la URL para que
+  // un recarga posterior no vuelva a forzar el modal de la tarea.
+  const requestedTaskNumber = useMemo(() => {
+    const raw = searchParams.get("tarea");
+    const parsed = Number.parseInt(raw ?? "", 10);
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+  }, [searchParams]);
+
+  const [taskToOpen, setTaskToOpen] = useState(null);
+  const openNonceRef = useRef(0);
+
+  useEffect(() => {
+    if (requestedTaskNumber === null) return;
+    // El nonce permite reabrir la misma tarea si se vuelve a pulsar el enlace
+    // del correo sin haber recargado la página.
+    openNonceRef.current += 1;
+    setTaskToOpen({ number: requestedTaskNumber, nonce: openNonceRef.current });
+    navigate({ pathname: `/projects/${id}` }, { replace: true });
+  }, [requestedTaskNumber, id, navigate]);
 
   const fetchProject = useCallback(async () => {
     setLoading(true);
@@ -59,6 +83,7 @@ export default function ProjectDetail() {
   }, [id]);
 
   const myRole = getMyRole(project, user?.id);
+  const { slot: headerTabsSlot } = useContext(HeaderTabsContext);
 
   // Si falla, ConfirmDialog muestra el error dentro del modal
   const handleDelete = async () => {
@@ -106,36 +131,48 @@ export default function ProjectDetail() {
 
       {error && <p className="error">{error}</p>}
 
-      <div className="tabs">
-        <button
-          className={`tab ${tab === "board" ? "active" : ""}`}
-          onClick={() => setTab("board")}
-        >
-          Tablero
-        </button>
-        <button
-          className={`tab ${tab === "detail" ? "active" : ""}`}
-          onClick={() => setTab("detail")}
-        >
-          Detalle
-        </button>
-        <RequireProjectRole role={myRole} allowed={["leader"]}>
-          <button
-            className={`tab ${tab === "members" ? "active" : ""}`}
-            onClick={() => setTab("members")}
-          >
-            Miembros ({members.length})
-          </button>
-        </RequireProjectRole>
-        <RequireProjectRole role={myRole} allowed={["leader"]}>
-          <button
-            className={`tab ${tab === "wip" ? "active" : ""}`}
-            onClick={() => setTab("wip")}
-          >
-            Configuración WIP
-          </button>
-        </RequireProjectRole>
-      </div>
+      {headerTabsSlot &&
+        createPortal(
+          <div className="header-tabs" role="tablist" aria-label="Secciones del proyecto">
+            <button
+              className={`tab ${tab === "board" ? "active" : ""}`}
+              onClick={() => setTab("board")}
+              role="tab"
+              aria-selected={tab === "board"}
+            >
+              Tablero
+            </button>
+            <button
+              className={`tab ${tab === "detail" ? "active" : ""}`}
+              onClick={() => setTab("detail")}
+              role="tab"
+              aria-selected={tab === "detail"}
+            >
+              Detalle
+            </button>
+            <RequireProjectRole role={myRole} allowed={["leader"]}>
+              <button
+                className={`tab ${tab === "members" ? "active" : ""}`}
+                onClick={() => setTab("members")}
+                role="tab"
+                aria-selected={tab === "members"}
+              >
+                Miembros ({members.length})
+              </button>
+            </RequireProjectRole>
+            <RequireProjectRole role={myRole} allowed={["leader"]}>
+              <button
+                className={`tab ${tab === "wip" ? "active" : ""}`}
+                onClick={() => setTab("wip")}
+                role="tab"
+                aria-selected={tab === "wip"}
+              >
+                Configuración WIP
+              </button>
+            </RequireProjectRole>
+          </div>,
+          headerTabsSlot,
+        )}
 
       {tab === "board" && (
         <KanbanBoard
@@ -143,6 +180,7 @@ export default function ProjectDetail() {
           project={project}
           members={members}
           myRole={myRole}
+          taskToOpen={taskToOpen}
         />
       )}
 
@@ -209,25 +247,56 @@ function MembersSection({ projectId, members, onRefresh }) {
   const [role, setRole] = useState("member");
   const [sending, setSending] = useState(false);
   const [msg, setMsg] = useState({ type: "", text: "" });
+  const [pending, setPending] = useState([]);
 
+  const fetchInvitations = useCallback(async () => {
+    try {
+      const data = await api.get(`/projects/${projectId}/invitations`);
+      setPending(Array.isArray(data) ? data : []);
+    } catch {
+      // La lista de pendientes es informativa: si falla no interrumpe el
+      // resto de la sección de miembros.
+      setPending([]);
+    }
+  }, [projectId]);
+
+  useEffect(() => {
+    fetchInvitations();
+  }, [fetchInvitations]);
+
+  // El backend decide según tenga o no cuenta: añade al miembro y le avisa,
+  // o envía una invitación con un enlace válido 7 días.
   const handleInvite = async (e) => {
     e.preventDefault();
     if (!email.trim()) return;
     setSending(true);
     setMsg({ type: "", text: "" });
     try {
-      await api.post(`/projects/${projectId}/members`, {
+      const result = await api.post(`/projects/${projectId}/invitations`, {
         email: email.trim(),
         role,
       });
       setEmail("");
       setRole("member");
-      setMsg({ type: "success", text: "Miembro añadido correctamente" });
-      onRefresh();
+      setMsg({ type: "success", text: result.message });
+      await Promise.all([fetchInvitations(), onRefresh()]);
     } catch (err) {
       setMsg({ type: "error", text: err.message });
     } finally {
       setSending(false);
+    }
+  };
+
+  const handleRevoke = async (invitation) => {
+    setMsg({ type: "", text: "" });
+    try {
+      const result = await api.delete(
+        `/projects/${projectId}/invitations/${invitation.id}`,
+      );
+      setMsg({ type: "success", text: result.message });
+      await fetchInvitations();
+    } catch (err) {
+      setMsg({ type: "error", text: err.message });
     }
   };
 
@@ -260,6 +329,38 @@ function MembersSection({ projectId, members, onRefresh }) {
       </form>
       {msg.text && (
         <p className={msg.type === "error" ? "error" : "success"}>{msg.text}</p>
+      )}
+
+      {pending.length > 0 && (
+        <div className="invite-pending">
+          <h4 className="invite-pending-title">
+            Invitaciones pendientes ({pending.length})
+          </h4>
+          {pending.map((inv) => (
+            <div key={inv.id} className="member-row">
+              <div className="member-info">
+                <div className="member-text">
+                  <span className="member-name">{inv.email}</span>
+                  <span className="member-email">
+                    Invitado por {inv.invitedBy?.name || "un líder"} ·{" "}
+                    {inv.expiresAt
+                      ? `caduca el ${new Date(inv.expiresAt).toLocaleDateString()}`
+                      : "sin caducidad"}
+                  </span>
+                </div>
+                <span className={`badge badge-${inv.role}`}>
+                  {inv.role === "leader" ? "Líder" : "Miembro"}
+                </span>
+              </div>
+              <button
+                className="btn btn-danger btn-sm"
+                onClick={() => handleRevoke(inv)}
+              >
+                Revocar
+              </button>
+            </div>
+          ))}
+        </div>
       )}
 
       <div className="members-list">

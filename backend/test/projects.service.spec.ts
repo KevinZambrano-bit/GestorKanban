@@ -228,56 +228,6 @@ describe('ProjectsService', () => {
     });
   });
 
-  describe('inviteMember', () => {
-    it('debe invitar a un usuario al proyecto cuando el solicitante es líder', async () => {
-      const projectId = 11;
-      const userId = 1;
-      const inviteMemberDto = {
-        email: 'nuevo@test.com',
-        role: ProjectRole.MEMBER,
-      } as any;
-      const project = { id: projectId } as Project;
-      const user = {
-        id: 20,
-        name: 'Nuevo Usuario',
-        email: inviteMemberDto.email,
-      } as User;
-      const leaderMembership = { id: 2, role: ProjectRole.LEADER } as any;
-      const newMembership = {
-        id: 3,
-        project,
-        user,
-        role: ProjectRole.MEMBER,
-      } as any;
-
-      memberRepository.findOne.mockImplementation(({ where }: any) => {
-        if (
-          where.project?.id === projectId &&
-          where.user?.id === userId &&
-          where.role === ProjectRole.LEADER
-        ) {
-          return Promise.resolve(leaderMembership);
-        }
-        if (where.project?.id === projectId && where.user?.id === user.id) {
-          return Promise.resolve(null);
-        }
-        return Promise.resolve(null);
-      });
-      projectRepository.findOne.mockResolvedValue(project as any);
-      userRepository.findOne.mockResolvedValue(user as any);
-      memberRepository.create.mockReturnValue(newMembership);
-      memberRepository.save.mockResolvedValue(newMembership);
-
-      const result = await service.inviteMember(
-        projectId,
-        inviteMemberDto,
-        userId,
-      );
-
-      expect(result).toEqual({
-        message: `${user.name} agregado como ${newMembership.role} correctamente`,
-      });
-      expect(memberRepository.save).toHaveBeenCalledWith(newMembership);
-    });
-  });
+  // Nota: la invitación por email (con envío de correo y soporte para
+  // invitados sin cuenta) se prueba en src/projects/invitations.service.spec.ts.
 });

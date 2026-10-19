@@ -16,6 +16,7 @@ import {
   ApiBearerAuth,
 } from '@nestjs/swagger';
 import { ProjectsService } from './projects.service';
+import { InvitationsService } from './invitations.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { InviteMemberDto } from './dto/invite-member.dto';
@@ -32,7 +33,10 @@ import { RequireGlobalRole } from '../auth/decorators/global-role.decorator';
 @Controller('projects')
 @UseGuards(JwtAuthGuard)
 export class ProjectsController {
-  constructor(private projectsService: ProjectsService) {}
+  constructor(
+    private projectsService: ProjectsService,
+    private invitationsService: InvitationsService,
+  ) {}
 
   @Post()
   @ApiOperation({ summary: 'Crear nuevo proyecto' })
@@ -92,16 +96,30 @@ export class ProjectsController {
     return this.projectsService.remove(+id, req.user.id);
   }
 
+  // Nota: la Route dedicada a invitar por correo (con envío de email y
+  // soporte para invitados sin cuenta) vive en InvitationsController como
+  // POST /projects/:id/invitations. Este endpoint se conserva para no romper
+  // a los clientes que ya lo usan, y delega en el mismo servicio.
   @Post(':id/members')
   @UseGuards(ProjectRoleGuard)
   @RequireProjectRole(ProjectRole.LEADER)
-  @ApiOperation({ summary: 'Invitar miembro (solo LEADER)' })
+  @ApiOperation({
+    summary: 'Invitar miembro por email (solo LEADER, legacy)',
+    description:
+      'Alias de POST /projects/:id/invitations. Se mantiene por compatibilidad.',
+  })
+  @ApiResponse({ status: 400, description: 'No se pudo enviar el correo' })
   inviteMember(
     @Param('id') id: string,
     @Body() inviteMemberDto: InviteMemberDto,
     @Req() req,
   ) {
-    return this.projectsService.inviteMember(+id, inviteMemberDto, req.user.id);
+    return this.invitationsService.inviteMember(
+      +id,
+      inviteMemberDto.email,
+      inviteMemberDto.role || ProjectRole.MEMBER,
+      req.user.id,
+    );
   }
 
   @Get(':id/members')
