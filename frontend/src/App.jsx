@@ -24,10 +24,12 @@ export default function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
-        {/* El token viaja en la URL, así que el enlace funciona con o sin
-            sesión iniciada: la pantalla de aceptación detecta cuál es el caso. */}
-        <Route path="/invitacion/:token" element={<AcceptInvitation />} />
       </Route>
+      {/* La aceptación de invitación queda fuera de PublicRoute: el invitado
+          que YA tiene sesión iniciada debe poder abrir el enlace y aceptar.
+          PublicRoute redirige a los usuarios con sesión al dashboard, lo que
+          dejaba la pantalla inalcanzable para las cuentas existentes. */}
+      <Route path="/invitacion/:token" element={<AcceptInvitation />} />
       {/* ResetPassword queda fuera de PublicRoute: con sesión activa el
           formulario se muestra igualmente, pero nunca desplaza al dashboard. */}
       <Route path="/reset-password" element={<ResetPassword />} />

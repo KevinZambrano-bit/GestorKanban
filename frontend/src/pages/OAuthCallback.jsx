@@ -15,7 +15,17 @@ export default function OAuthCallback() {
     if (!token) return
 
     loginWithGoogleToken(token)
-      .then(() => navigate('/', { replace: true }))
+      .then(() => {
+        // Si se inició sesión desde una invitación, volvemos a ella para
+        // poder aceptarla.
+        const pendingInvitation = localStorage.getItem('pendingInvitation')
+        if (pendingInvitation) {
+          localStorage.removeItem('pendingInvitation')
+          navigate(`/invitacion/${pendingInvitation}`, { replace: true })
+        } else {
+          navigate('/', { replace: true })
+        }
+      })
       .catch((authError) => setError(authError.message))
   }, [loginWithGoogleToken, navigate, token])
 

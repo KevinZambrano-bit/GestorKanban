@@ -8,7 +8,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { randomBytes } from 'crypto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { IsNull, Repository } from 'typeorm';
 import {
   ProjectInvitation,
   InvitationStatus,
@@ -18,7 +18,7 @@ import { Project } from './entities/project.entity';
 import { User } from '../users/entities/user.entity';
 import { MailService, MailResult } from '../mail/mail.service';
 import { EmailVerifierService } from '../common/email-verifier.service';
-import { invitationUrl, projectUrl } from '../common/app-urls';
+import { invitationUrl } from '../common/app-urls';
 
 export const INVITATION_TTL_DAYS = 7;
 
@@ -73,52 +73,12 @@ export class InvitationsService {
       };
     }
 
-    const existingUser = await this.userRepository.findOne({
-      where: { email },
-    });
-
-    // ── El usuario ya tiene cuenta: se añade directamente ──
-    // El correo aquí es un aviso, no el mecanismo de acceso: el miembro ya
-    // puede entrar al tablero aunque el aviso no llegue. Por eso no se
-    // revierte la incorporación, pero sí se informa del envío fallido para
-    // que el líder no crea que se le ha avisado a la persona.
-    if (existingUser) {
-      await this.memberRepository.save(
-        this.memberRepository.create({
-          project,
-          user: existingUser,
-          role,
-        }),
-      );
-
-      const mail = await this.mailService.sendWelcomeEmail({
-        to: existingUser.email,
-        name: existingUser.name,
-        projectName: project.name,
-        role,
-        projectUrl: projectUrl(this.configService, projectId),
-      });
-
-      // `sent` significa que el servidor de correo aceptó el envío, no que el
-      // invitado lo haya leído. Si lo rechazó, el miembro ya está dentro (el
-      // correo aquí es solo un aviso) pero hay que decírselo al líder.
-      if (!mail.sent) {
-        this.logger.warn(
-          `No se pudo avisar por correo a ${existingUser.email} de su incorporación a ${project.name}`,
-        );
-        return {
-          message: `${existingUser.name} agregado como ${role} correctamente, pero no se le pudo avisar por correo (${this.mailFailureHint(mail)})`,
-          emailSent: false,
-        };
-      }
-
-      return {
-        message: `${existingUser.name} agregado como ${role} correctamente`,
-        emailSent: true,
-      };
-    }
-
-    // ── El usuario no tiene cuenta: invitación con token ──
+    // ── Invitación con token ──
+    // Todos los invitados reciben un enlace y deben aceptarlo, tengan cuenta o
+    // no: nadie entra a un proyecto sin dar su aprobación. El token es el
+    // mecanismo de acceso, así que si el correo falla la invitación queda
+    // inutilizable y se registra el motivo.
+    //
     // Los dominios de correo desechable se rechazan pronto: gastar un envío
     // (y uno de los ~500 diarios de Gmail) en una dirección temporal no lleva
     // a nadie. Después se comprueba que el dominio pueda recibir mensajes.
@@ -135,11 +95,12 @@ export class InvitationsService {
     }
 
     // Se limpian las invitaciones anteriores para el mismo email y proyecto
-    // (pendientes o fallidas): el enlace nuevo es el único válido.
+    // (pendientes o fallidas): el enlace nuevo es el único válido. Se usa
+    // IsNull() porque TypeORM ignora `acceptedAt: null` en el where.
     await this.invitationRepository.delete({
       project: { id: projectId },
       email,
-      acceptedAt: null,
+      acceptedAt: IsNull(),
     });
 
     const token = randomBytes(32).toString('hex');
@@ -200,12 +161,14 @@ export class InvitationsService {
     return this.mailService.misconfigurationHint;
   }
 
-  // Invitaciones pendientes de un proyecto (soloLeader)
+  // Invitaciones pendientes de un proyecto (soloLeader).
+  // TypeORM descarta `acceptedAt: null` del where, por eso se usa IsNull():
+  // sin él, las invitaciones ya aceptadas seguían apareciendo como pendientes.
   async findByProject(projectId: number): Promise<ProjectInvitation[]> {
     return this.invitationRepository.find({
       where: {
         project: { id: projectId },
-        acceptedAt: null,
+        acceptedAt: IsNull(),
         status: InvitationStatus.PENDING,
       },
       relations: ['invitedBy'],
@@ -214,9 +177,14 @@ export class InvitationsService {
   }
 
   // Revocar una invitación (soloLeader)
-  async revoke(id: number, projectId: number): Promise<{ message: string }> {
+  // El orden es (projectId, invitationId) igual que findByProject e inviteMember:
+  // invertirlo hacía que la búsqueda usara los ids cruzados y no encontrara nada.
+  async revoke(
+    projectId: number,
+    invitationId: number,
+  ): Promise<{ message: string }> {
     const invitation = await this.invitationRepository.findOne({
-      where: { id, project: { id: projectId } },
+      where: { id: invitationId, project: { id: projectId } },
     });
 
     if (!invitation)
@@ -287,7 +255,11 @@ export class InvitationsService {
       );
     }
 
+    // Se marca con un estado terminal además de la fecha: así una invitación
+    // aceptada nunca vuelve a contarse como pendiente, aunque se consulte solo
+    // por `status`.
     invitation.acceptedAt = new Date();
+    invitation.status = InvitationStatus.ACCEPTED;
     await this.invitationRepository.save(invitation);
 
     // El id del proyecto viaja en la respuesta para que el frontend pueda

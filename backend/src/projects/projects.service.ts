@@ -11,6 +11,7 @@ import { User } from '../users/entities/user.entity';
 import { Task, TaskStatus } from '../tasks/entities/task.entity';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
+import { userIsGlobalAdmin } from '../common/global-admin';
 
 @Injectable()
 export class ProjectsService {
@@ -157,9 +158,9 @@ export class ProjectsService {
     // Si es público cualquier usuario autenticado puede verlo
     if (project.isPublic) return project;
 
-    // Si es privado debe ser miembro
+    // Si es privado debe ser miembro; el admin global puede ver cualquiera
     const isMember = project.members.some((m) => m.user?.id === userId);
-    if (!isMember) {
+    if (!isMember && !(await userIsGlobalAdmin(this.userRepository, userId))) {
       throw new ForbiddenException('No tienes acceso a este proyecto');
     }
 
@@ -220,16 +221,19 @@ export class ProjectsService {
     }));
   }
 
-  // Eliminar miembro del proyecto (solo LEADER)
+  // Eliminar miembro del proyecto (LEADER o admin global)
   async removeMember(
     id: number,
     memberId: number,
     userId: number,
   ): Promise<{ message: string }> {
-    await this.checkLeaderPermission(id, userId);
+    // El admin global gestiona cualquier proyecto aunque no sea miembro. Se
+    // calcula una sola vez para no repetir la consulta en cada comprobación.
+    const isAdmin = await userIsGlobalAdmin(this.userRepository, userId);
+    if (!isAdmin) await this.checkLeaderPermission(id, userId);
 
     // Verificar que no se esté eliminando a sí mismo
-    if (memberId === userId) {
+    if (memberId === userId && !isAdmin) {
       throw new ForbiddenException(
         'No puedes eliminarte a ti mismo del proyecto',
       );
@@ -244,8 +248,9 @@ export class ProjectsService {
       throw new NotFoundException('El usuario no es miembro de este proyecto');
     }
 
-    // Verificar que no se esté eliminando al líder
-    if (membership.role === ProjectRole.LEADER) {
+    // Verificar que no se esté eliminando al líder. El admin global sí puede,
+    // porque tiene control total sobre la composición del proyecto.
+    if (membership.role === ProjectRole.LEADER && !isAdmin) {
       throw new ForbiddenException('No puedes eliminar al líder del proyecto');
     }
 
@@ -263,7 +268,7 @@ export class ProjectsService {
     };
   }
 
-  // Helper → verifica que el usuario sea LEADER del proyecto
+  // Helper → verifica que el usuario sea LEADER del proyecto o admin global
   private async checkLeaderPermission(
     projectId: number,
     userId: number,
@@ -275,7 +280,11 @@ export class ProjectsService {
         role: ProjectRole.LEADER,
       },
     });
-    if (!membership)
-      throw new ForbiddenException('Solo el líder puede realizar esta acción');
+    if (membership) return;
+
+    // El admin global actúa como líder de cualquier proyecto.
+    if (await userIsGlobalAdmin(this.userRepository, userId)) return;
+
+    throw new ForbiddenException('Solo el líder puede realizar esta acción');
   }
 }

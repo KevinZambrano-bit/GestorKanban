@@ -33,13 +33,10 @@ export class InvitationsController {
   @ApiOperation({
     summary: 'Invitar a un proyecto por email (solo LEADER)',
     description:
-      'Si el email ya tiene cuenta se le añade directamente y se le avisa. ' +
-      'Si no, se le envía una invitación con un token válido durante 7 días.',
+      'Siempre se envía una invitación con un token válido 7 días (tenga o no ' +
+      'cuenta el invitado). La persona debe aceptarla para unirse al proyecto.',
   })
-  @ApiResponse({
-    status: 201,
-    description: 'Invitación enviada o miembro añadido',
-  })
+  @ApiResponse({ status: 201, description: 'Invitación enviada' })
   @ApiResponse({ status: 400, description: 'No se pudo enviar el correo' })
   invite(
     @Param('id') id: string,

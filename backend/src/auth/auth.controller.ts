@@ -58,7 +58,7 @@ export class AuthController {
   // con correos a un tercero. 10 por hora e IP deja pasar un uso legítimo (quien
   // olvida la clave reintenta alguna vez) y corta el abuso automatizado.
   @HttpCode(HttpStatus.OK)
-  @Throttle({ forgotPassword: { limit: 10, ttl: 3_600_000 } })
+  @Throttle({ default: { limit: 10, ttl: 3_600_000 } })
   @ApiOperation({
     summary: 'Solicitar enlace para restablecer la contraseña',
     description:

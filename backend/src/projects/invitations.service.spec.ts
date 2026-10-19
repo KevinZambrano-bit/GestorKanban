@@ -8,6 +8,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { randomBytes } from 'crypto';
+import { IsNull } from 'typeorm';
 
 // El token se genera con crypto; se fija el byte para poder afirmar sobre él
 // en vez de solo comprobar la forma con una expresión regular.
@@ -46,7 +47,6 @@ describe('InvitationsService', () => {
   const userRepo = { findOne: jest.fn() };
   const mail = {
     sendProjectInvitation: jest.fn(),
-    sendWelcomeEmail: jest.fn(),
     misconfigurationHint: 'El servicio de correo no está configurado.',
   };
   const config = { get: jest.fn(() => 'http://localhost:5173') };
@@ -71,7 +71,6 @@ describe('InvitationsService', () => {
 
     projectRepo.findOne.mockResolvedValue(project);
     config.get.mockReturnValue('http://localhost:5173');
-    mail.sendWelcomeEmail.mockResolvedValue({ sent: true });
     mail.sendProjectInvitation.mockResolvedValue({ sent: true });
     emailVerifier.canReceiveMail.mockResolvedValue(true);
     emailVerifier.isDisposable.mockReturnValue(false);
@@ -80,13 +79,13 @@ describe('InvitationsService', () => {
   afterEach(() => jest.useRealTimers());
 
   // ─── Usuario que ya tiene cuenta ───────────────────────────
+  // El invitado debe aprobar siempre: aunque tenga cuenta, no se le añade al
+  // proyecto directamente, se le envía una invitación con token que él acepta.
 
   describe('inviteMember con usuario existente', () => {
-    it('lo agrega como miembro y le avisa por correo', async () => {
+    it('le envía una invitación con token en lugar de agregarlo directamente', async () => {
       memberRepo.findOne.mockResolvedValue(null); // no es miembro todavía
-      userRepo.findOne
-        .mockResolvedValueOnce(inviter) // quién invita
-        .mockResolvedValueOnce(existingUser); // a quién invita
+      userRepo.findOne.mockResolvedValue(inviter); // quién invita
 
       const result = await service.inviteMember(
         project.id,
@@ -95,19 +94,25 @@ describe('InvitationsService', () => {
         inviter.id,
       );
 
-      expect(memberRepo.save).toHaveBeenCalledWith(
-        expect.objectContaining({ role: ProjectRole.MEMBER }),
-      );
-      expect(mail.sendWelcomeEmail).toHaveBeenCalledWith(
+      // No entra al proyecto hasta que acepte
+      expect(memberRepo.save).not.toHaveBeenCalled();
+      expect(invitationRepo.save).toHaveBeenCalledWith(
         expect.objectContaining({
-          to: 'beto@test.com',
+          email: existingUser.email,
+          role: ProjectRole.MEMBER,
+          project,
+          invitedBy: inviter,
+          acceptedAt: null,
+        }),
+      );
+      expect(mail.sendProjectInvitation).toHaveBeenCalledWith(
+        expect.objectContaining({
+          to: existingUser.email,
           projectName: 'Tienda online',
         }),
       );
-      expect(result.message).toContain('agregado');
+      expect(result.message).toContain('Invitación enviada');
       expect(result.emailSent).toBe(true);
-      // Un usuario existente no necesita invitación pendiente
-      expect(invitationRepo.save).not.toHaveBeenCalled();
     });
 
     it('no duplica membresía si ya era miembro del proyecto', async () => {
@@ -125,44 +130,17 @@ describe('InvitationsService', () => {
       );
 
       expect(memberRepo.save).not.toHaveBeenCalled();
+      expect(invitationRepo.save).not.toHaveBeenCalled();
       expect(result.message).toContain('ya es');
-    });
-
-    it('mantiene al miembro aunque el aviso por correo falle', async () => {
-      memberRepo.findOne.mockResolvedValue(null);
-      userRepo.findOne
-        .mockResolvedValueOnce(inviter)
-        .mockResolvedValueOnce(existingUser);
-      mail.sendWelcomeEmail.mockResolvedValue({
-        sent: false,
-        reason: 'boom',
-      });
-
-      const result = await service.inviteMember(
-        project.id,
-        existingUser.email,
-        ProjectRole.MEMBER,
-        inviter.id,
-      );
-
-      // Aquí el correo es un aviso, no el mecanismo de acceso: la persona ya
-      // puede entrar al tablero, así que no se deshace la incorporación.
-      expect(memberRepo.save).toHaveBeenCalled();
-      expect(invitationRepo.remove).not.toHaveBeenCalled();
-      // Pero el líder tiene que enterarse de que no se le avisó.
-      expect(result.emailSent).toBe(false);
-      expect(result.message).toContain('no se le pudo avisar por correo');
     });
   });
 
-  // ─── Usuario sin cuenta: invitación por correo ────────────
+  // ─── Invitación por correo ────────────────────────────────
 
-  describe('inviteMember con usuario desconocido', () => {
+  describe('inviteMember crea la invitación', () => {
     it('crea una invitación con token y envía el correo', async () => {
       memberRepo.findOne.mockResolvedValue(null);
-      userRepo.findOne
-        .mockResolvedValueOnce(inviter)
-        .mockResolvedValueOnce(null); // no existe
+      userRepo.findOne.mockResolvedValue(inviter); // no existe
 
       const result = await service.inviteMember(
         project.id,
@@ -191,9 +169,7 @@ describe('InvitationsService', () => {
 
     it('marca la invitación como fallida si el correo no se pudo enviar', async () => {
       memberRepo.findOne.mockResolvedValue(null);
-      userRepo.findOne
-        .mockResolvedValueOnce(inviter)
-        .mockResolvedValueOnce(null);
+      userRepo.findOne.mockResolvedValue(inviter);
       mail.sendProjectInvitation.mockResolvedValue({
         sent: false,
         reason: 'boom',
@@ -222,9 +198,7 @@ describe('InvitationsService', () => {
 
     it('rechaza un correo de dominio desechable antes de crearlo', async () => {
       memberRepo.findOne.mockResolvedValue(null);
-      userRepo.findOne
-        .mockResolvedValueOnce(inviter)
-        .mockResolvedValueOnce(null);
+      userRepo.findOne.mockResolvedValue(inviter);
       emailVerifier.isDisposable.mockReturnValue(true);
 
       await expect(
@@ -242,9 +216,7 @@ describe('InvitationsService', () => {
 
     it('rechaza un correo cuyo dominio no puede recibir mensajes', async () => {
       memberRepo.findOne.mockResolvedValue(null);
-      userRepo.findOne
-        .mockResolvedValueOnce(inviter)
-        .mockResolvedValueOnce(null);
+      userRepo.findOne.mockResolvedValue(inviter);
       emailVerifier.canReceiveMail.mockResolvedValue(false);
 
       await expect(
@@ -263,9 +235,7 @@ describe('InvitationsService', () => {
 
     it('invalida invitaciones anteriores del mismo email', async () => {
       memberRepo.findOne.mockResolvedValue(null);
-      userRepo.findOne
-        .mockResolvedValueOnce(inviter)
-        .mockResolvedValueOnce(null);
+      userRepo.findOne.mockResolvedValue(inviter);
 
       await service.inviteMember(
         project.id,
@@ -277,8 +247,31 @@ describe('InvitationsService', () => {
       expect(invitationRepo.delete).toHaveBeenCalledWith({
         project: { id: project.id },
         email: 'nuevo@empresa.com',
-        acceptedAt: null,
+        acceptedAt: IsNull(),
       });
+    });
+  });
+
+  // ─── Listado de pendientes ─────────────────────────────────
+
+  describe('findByProject', () => {
+    // Regresión: TypeORM ignora `acceptedAt: null` en el where, así que las
+    // invitaciones ya aceptadas seguían apareciendo como pendientes. Debe
+    // usarse IsNull().
+    it('filtra por invitaciones sin aceptar y en estado pendiente', async () => {
+      invitationRepo.find.mockResolvedValue([]);
+
+      await service.findByProject(project.id);
+
+      expect(invitationRepo.find).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            project: { id: project.id },
+            acceptedAt: IsNull(),
+            status: InvitationStatus.PENDING,
+          }),
+        }),
+      );
     });
   });
 
@@ -381,7 +374,10 @@ describe('InvitationsService', () => {
         expect.objectContaining({ project, role: ProjectRole.MEMBER }),
       );
       expect(invitationRepo.save).toHaveBeenCalledWith(
-        expect.objectContaining({ acceptedAt: expect.any(Date) }),
+        expect.objectContaining({
+          acceptedAt: expect.any(Date),
+          status: InvitationStatus.ACCEPTED,
+        }),
       );
       expect(result.message).toContain('Te uniste a Tienda online');
       // El frontend usa el projectId para abrir el tablero directamente
@@ -437,15 +433,20 @@ describe('InvitationsService', () => {
         email: 'nuevo@empresa.com',
       });
 
-      const result = await service.revoke(5, project.id);
+      const result = await service.revoke(project.id, 5);
 
+      // Regresión: los argumentos iban cruzados y se buscaba una invitación
+      // con id = projectId dentro de un proyecto con id = invitationId.
+      expect(invitationRepo.findOne).toHaveBeenCalledWith({
+        where: { id: 5, project: { id: project.id } },
+      });
       expect(invitationRepo.remove).toHaveBeenCalled();
       expect(result.message).toContain('revocada');
     });
 
     it('falla si la invitación no pertenece al proyecto', async () => {
       invitationRepo.findOne.mockResolvedValue(null);
-      await expect(service.revoke(5, project.id)).rejects.toThrow(
+      await expect(service.revoke(project.id, 5)).rejects.toThrow(
         NotFoundException,
       );
     });

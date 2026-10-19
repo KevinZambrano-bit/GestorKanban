@@ -11,6 +11,7 @@ import { User } from '../../users/entities/user.entity';
 
 export enum InvitationStatus {
   PENDING = 'pending',
+  ACCEPTED = 'accepted',
   FAILED = 'failed',
 }
 

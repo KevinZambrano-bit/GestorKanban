@@ -22,6 +22,7 @@ import { UpdateSubtaskDto } from './dto/update-subtask.dto';
 import { AiClientService } from '../ai-client/ai-client.service';
 import { MailService } from '../mail/mail.service';
 import { taskUrl } from '../common/app-urls';
+import { userIsGlobalAdmin } from '../common/global-admin';
 import { ConfigService } from '@nestjs/config';
 
 @Injectable()
@@ -435,10 +436,14 @@ export class TasksService {
     const membership = await this.memberRepository.findOne({
       where: { project: { id: projectId }, user: { id: userId } },
     });
-    if (!membership)
-      throw new ForbiddenException(
-        'Este proyecto es privado. Solo sus miembros pueden ver sus tareas',
-      );
+    if (membership) return;
+
+    // El admin global puede ver las tareas de cualquier proyecto.
+    if (await userIsGlobalAdmin(this.userRepository, userId)) return;
+
+    throw new ForbiddenException(
+      'Este proyecto es privado. Solo sus miembros pueden ver sus tareas',
+    );
   }
 
   // Verifica que el usuario sea MEMBER o LEADER
@@ -449,14 +454,17 @@ export class TasksService {
     const membership = await this.memberRepository.findOne({
       where: { project: { id: projectId }, user: { id: userId } },
     });
-    if (!membership) {
-      throw new ForbiddenException(
-        'Necesitas ser miembro del proyecto para realizar esta acción',
-      );
-    }
+    if (membership) return;
+
+    // El admin global puede gestionar las tareas de cualquier proyecto.
+    if (await userIsGlobalAdmin(this.userRepository, userId)) return;
+
+    throw new ForbiddenException(
+      'Necesitas ser miembro del proyecto para realizar esta acción',
+    );
   }
 
-  // Verifica que el usuario sea LEADER
+  // Verifica que el usuario sea LEADER o admin global
   private async checkLeaderPermission(
     projectId: number,
     userId: number,
@@ -468,8 +476,12 @@ export class TasksService {
         role: ProjectRole.LEADER,
       },
     });
-    if (!membership)
-      throw new ForbiddenException('Solo el líder puede realizar esta acción');
+    if (membership) return;
+
+    // El admin global actúa como líder de cualquier proyecto.
+    if (await userIsGlobalAdmin(this.userRepository, userId)) return;
+
+    throw new ForbiddenException('Solo el líder puede realizar esta acción');
   }
 
   /**

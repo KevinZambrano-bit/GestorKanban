@@ -82,7 +82,10 @@ export default function ProjectDetail() {
     }
   }, [id]);
 
-  const myRole = getMyRole(project, user?.id);
+  // El admin global tiene control total: se le trata como líder de cualquier
+  // proyecto, aunque no sea miembro, para que pueda gestionarlo desde la UI.
+  const isAdmin = user?.role?.name === "admin";
+  const myRole = isAdmin ? "leader" : getMyRole(project, user?.id);
   const { slot: headerTabsSlot } = useContext(HeaderTabsContext);
 
   // Si falla, ConfirmDialog muestra el error dentro del modal
@@ -204,6 +207,7 @@ export default function ProjectDetail() {
           <MembersSection
             projectId={id}
             members={members}
+            isAdmin={isAdmin}
             onRefresh={fetchMembers}
           />
         </RequireProjectRole>
@@ -242,7 +246,7 @@ export default function ProjectDetail() {
   );
 }
 
-function MembersSection({ projectId, members, onRefresh }) {
+function MembersSection({ projectId, members, isAdmin, onRefresh }) {
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("member");
   const [sending, setSending] = useState(false);
@@ -380,7 +384,9 @@ function MembersSection({ projectId, members, onRefresh }) {
                 {m.role === "leader" ? "Líder" : "Miembro"}
               </span>
             </div>
-            {m.role !== "leader" && (
+            {/* Un admin global puede quitar a cualquier miembro, también al
+                líder; un líder solo puede quitar a los miembros. */}
+            {(isAdmin || m.role !== "leader") && (
               <button
                 className="btn btn-danger btn-sm"
                 onClick={() => setRemoving({ id: m.id, name: m.name })}

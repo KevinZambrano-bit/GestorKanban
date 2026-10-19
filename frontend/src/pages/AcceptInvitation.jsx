@@ -95,19 +95,11 @@ export default function AcceptInvitation() {
               Esta invitación es para <strong>{invitation.email}</strong>. Inicia
               sesión con esa cuenta o créala para entrar al proyecto.
             </p>
-            <button
-              type="button"
-              className="btn btn-primary btn-block"
-              onClick={handleAccept}
-              disabled={loading}
-            >
-              {loading ? <span className="btn-spinner" aria-hidden="true" /> : 'Continuar'}
-            </button>
             <Link
               to={`/login?invitacion=${token}`}
-              className="btn btn-block"
+              className="btn btn-primary btn-block"
             >
-              Iniciar sesión
+              Iniciar sesión y aceptar
             </Link>
             <Link
               to={`/register?invitacion=${token}&email=${encodeURIComponent(invitation.email)}`}

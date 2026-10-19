@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate, Link, useSearchParams } from 'react-router-dom'
 import useAuth from '../hooks/useAuth'
 import { API_URL } from '../services/api'
 import AuthLayout from '../components/auth/AuthLayout'
@@ -7,8 +7,12 @@ import AuthLayout from '../components/auth/AuthLayout'
 export default function Register() {
   const { register, loading } = useAuth()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  // Al venir de una invitación se vuelve a ella tras crear la cuenta y se
+  // precarga el email invitado.
+  const invitation = searchParams.get('invitacion')
   const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
+  const [email, setEmail] = useState(searchParams.get('email') || '')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
@@ -18,10 +22,19 @@ export default function Register() {
     setError('')
     try {
       await register(name, email, password)
-      navigate('/', { replace: true })
+      navigate(invitation ? `/invitacion/${invitation}` : '/', {
+        replace: true,
+      })
     } catch (err) {
       setError(err.message)
     }
+  }
+
+  // Google pierde los parámetros de la URL al redirigir, así que la invitación
+  // se guarda para recuperarla en OAuthCallback.
+  const handleGoogle = () => {
+    if (invitation) localStorage.setItem('pendingInvitation', invitation)
+    window.location.href = `${API_URL}/auth/google`
   }
 
   return (
@@ -91,7 +104,11 @@ export default function Register() {
 
       <div className="auth-divider"><span>o</span></div>
 
-      <a href={`${API_URL}/auth/google`} className="btn btn-google btn-block">
+      <button
+        type="button"
+        onClick={handleGoogle}
+        className="btn btn-google btn-block"
+      >
         <svg width="16" height="16" viewBox="0 0 18 18">
           <path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.9c1.7-1.57 2.68-3.87 2.68-6.62z"/>
           <path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.9-2.26c-.8.54-1.83.86-3.06.86-2.35 0-4.34-1.59-5.05-3.72H.96v2.33A9 9 0 0 0 9 18z"/>
@@ -99,10 +116,13 @@ export default function Register() {
           <path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0A9 9 0 0 0 .96 4.97l2.99 2.33C4.66 5.17 6.65 3.58 9 3.58z"/>
         </svg>
         Continuar con Google
-      </a>
+      </button>
 
       <p className="auth-switch">
-        ¿Ya tienes cuenta? <Link to="/login">Inicia sesión</Link>
+        ¿Ya tienes cuenta?{' '}
+        <Link to={invitation ? `/login?invitacion=${invitation}` : '/login'}>
+          Inicia sesión
+        </Link>
       </p>
     </AuthLayout>
   )

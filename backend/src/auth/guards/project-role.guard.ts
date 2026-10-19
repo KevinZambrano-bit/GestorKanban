@@ -12,7 +12,9 @@ import {
   ProjectRole,
 } from '../../projects/entities/project-member.entity';
 import { Project } from '../../projects/entities/project.entity';
+import { User } from '../../users/entities/user.entity';
 import { PROJECT_ROLE_KEY } from '../decorators/project-role.decorator';
+import { userIsGlobalAdmin } from '../../common/global-admin';
 
 @Injectable()
 export class ProjectRoleGuard implements CanActivate {
@@ -22,6 +24,8 @@ export class ProjectRoleGuard implements CanActivate {
     private memberRepository: Repository<ProjectMember>,
     @InjectRepository(Project)
     private projectRepository: Repository<Project>,
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -61,17 +65,19 @@ export class ProjectRoleGuard implements CanActivate {
       },
     });
 
+    // Verificar si el rol del usuario está en los roles requeridos
+    if (membership && requiredRoles.includes(membership.role)) return true;
+
+    // El admin global tiene control total: puede operar sobre cualquier
+    // proyecto (público o privado) aunque no sea miembro. Se consulta en BD,
+    // no en el JWT, para que un cambio de rol surta efecto de inmediato.
+    if (await userIsGlobalAdmin(this.userRepository, userId)) return true;
+
     if (!membership)
       throw new ForbiddenException('No eres miembro de este proyecto');
 
-    // Verificar si el rol del usuario está en los roles requeridos
-    const hasRole = requiredRoles.includes(membership.role);
-    if (!hasRole) {
-      throw new ForbiddenException(
-        `Necesitas ser ${requiredRoles.join(' o ')} para realizar esta acción`,
-      );
-    }
-
-    return true;
+    throw new ForbiddenException(
+      `Necesitas ser ${requiredRoles.join(' o ')} para realizar esta acción`,
+    );
   }
 }
