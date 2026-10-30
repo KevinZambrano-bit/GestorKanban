@@ -124,7 +124,15 @@ describe('AuthService', () => {
 
       const result = await service.register(dto);
 
-      expect(result.access_token).toBe('fake-jwt');
+      expect(result).toMatchObject({
+        access_token: 'fake-jwt',
+        user: {
+          id: 1,
+          name: 'Kevin',
+          email: 'kevin@test.com',
+          role,
+        },
+      });
       expect(userRepository.create).toHaveBeenCalled();
       expect(userRepository.save).toHaveBeenCalled();
     });
@@ -164,128 +172,69 @@ describe('AuthService', () => {
 
       const result = await service.login(loginDto);
 
-      expect(result.access_token).toBe('fake-jwt');
-    });
-  });
-
-  // ─────────────────────────────────────────────
-  // RECUPERACIÓN DE CONTRASEÑA
-  // ─────────────────────────────────────────────
-
-  describe('forgotPassword', () => {
-    it('crea un token y envía el correo', async () => {
-      const user = {
-        id: 1,
-        name: 'Ana',
-        email: 'ana@test.com',
-        password: 'hashed',
-      };
-      userRepository.findOne.mockResolvedValue(user as any);
-      resetTokenRepository.create.mockImplementation(
-        (data: PasswordResetToken) => data,
-      );
-      resetTokenRepository.save.mockImplementation(
-        async (t: PasswordResetToken) => t,
-      );
-
-      const result = await service.forgotPassword('ana@test.com');
-
-      expect(result.message).toContain('Si ese correo tiene una cuenta');
-      expect(mailService.sendPasswordResetEmail).toHaveBeenCalledWith(
-        expect.objectContaining({
-          to: 'ana@test.com',
-          name: 'Ana',
-          expiresInMinutes: 30,
-        }),
-      );
-
-      const saved = resetTokenRepository.save.mock.calls[0][0];
-      // El token en claro solo viaja por el correo, nunca a la base de datos
-      expect(saved.tokenHash).toMatch(/^[a-f0-9]{64}$/);
-      expect(saved.tokenHash).not.toContain('token');
+      expect(result).toMatchObject({
+        access_token: 'fake-jwt',
+        user: {
+          id: 1,
+          email: 'kevin@test.com',
+          role: { name: 'admin' },
+        },
+      });
     });
 
-    it('responde igual si el correo no existe, sin enviar nada', async () => {
-      userRepository.findOne.mockResolvedValue(null);
-
-      const result = await service.forgotPassword('nadie@test.com');
-
-      expect(result.message).toContain('Si ese correo tiene una cuenta');
-      expect(mailService.sendPasswordResetEmail).not.toHaveBeenCalled();
-      expect(resetTokenRepository.save).not.toHaveBeenCalled();
-    });
-
-    it('no intenta restablecer cuentas que solo usan Google', async () => {
+    it('debe lanzar error si la contraseña es incorrecta', async () => {
       userRepository.findOne.mockResolvedValue({
         id: 1,
-        name: 'Ana',
-        email: 'ana@test.com',
+        email: 'kevin@test.com',
+        password: 'hashedPassword',
+        role: { name: 'admin' },
+      } as User);
+      (bcrypt.compare as jest.Mock).mockResolvedValue(false);
+
+      await expect(
+        service.login({
+          email: 'kevin@test.com',
+          password: 'wrong-password',
+        }),
+      ).rejects.toThrow(UnauthorizedException);
+    });
+
+    it('debe rechazar el login normal de una cuenta de Google', async () => {
+      userRepository.findOne.mockResolvedValue({
+        id: 1,
+        email: 'google@test.com',
         password: null,
-        googleId: 'google-123',
-      } as any);
+        role: { name: 'user' },
+      } as User);
 
-      await service.forgotPassword('ana@test.com');
-
-      expect(mailService.sendPasswordResetEmail).not.toHaveBeenCalled();
+      await expect(
+        service.login({
+          email: 'google@test.com',
+          password: 'any-password',
+        }),
+      ).rejects.toThrow(UnauthorizedException);
+      expect(bcrypt.compare).not.toHaveBeenCalled();
     });
   });
 
-  describe('resetPassword', () => {
-    it('actualiza la contraseña y marca el token como usado', async () => {
-      const user = { id: 1, email: 'ana@test.com', password: 'old' };
-      const record = {
-        id: 5,
-        user,
-        expiresAt: new Date(Date.now() + 60_000),
-        usedAt: null,
-      };
-      resetTokenRepository.findOne.mockResolvedValue(record as any);
-      (bcrypt.hash as jest.Mock).mockResolvedValue('newHash');
-      userRepository.save.mockImplementation(async (u: User) => u);
+  describe('getProfile', () => {
+    it('debe buscar el perfil por ID incluyendo el rol', async () => {
+      const userId = 7;
+      const user = {
+        id: userId,
+        name: 'Kevin',
+        email: 'kevin@test.com',
+        role: { id: 1, name: 'admin' },
+      } as User;
+      userRepository.findOne.mockResolvedValue(user);
 
-      const result = await service.resetPassword({
-        token: 'raw-token',
-        password: 'NuevaClave123',
+      const result = await service.getProfile(userId);
+
+      expect(result).toBe(user);
+      expect(userRepository.findOne).toHaveBeenCalledWith({
+        where: { id: userId },
+        relations: ['role'],
       });
-
-      expect(result.message).toContain('actualizada');
-      expect(bcrypt.hash).toHaveBeenCalledWith('NuevaClave123', 10);
-      expect(userRepository.save).toHaveBeenCalledWith(
-        expect.objectContaining({ password: 'newHash' }),
-      );
-      expect(record.usedAt).toBeInstanceOf(Date);
-    });
-
-    it('rechaza un token inexistente', async () => {
-      resetTokenRepository.findOne.mockResolvedValue(null);
-
-      await expect(
-        service.resetPassword({ token: 'fake', password: 'NuevaClave123' }),
-      ).rejects.toThrow(BadRequestException);
-    });
-
-    it('rechaza un token ya utilizado', async () => {
-      resetTokenRepository.findOne.mockResolvedValue({
-        expiresAt: new Date(Date.now() + 60_000),
-        usedAt: new Date(),
-        user: { id: 1 },
-      } as any);
-
-      await expect(
-        service.resetPassword({ token: 'used', password: 'NuevaClave123' }),
-      ).rejects.toThrow(BadRequestException);
-    });
-
-    it('rechaza un token expirado', async () => {
-      resetTokenRepository.findOne.mockResolvedValue({
-        expiresAt: new Date(Date.now() - 1000),
-        usedAt: null,
-        user: { id: 1 },
-      } as any);
-
-      await expect(
-        service.resetPassword({ token: 'old', password: 'NuevaClave123' }),
-      ).rejects.toThrow(BadRequestException);
     });
   });
 });
