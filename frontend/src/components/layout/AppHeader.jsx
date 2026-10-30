@@ -1,11 +1,15 @@
+import { useContext } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import useAuth from '../../hooks/useAuth'
+import ThemeToggle from '../ThemeToggle'
+import HeaderTabsContext from '../../context/HeaderTabsContext'
 import { getAvatarUrl } from '../../utils/avatar'
 
 export default function AppHeader() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
   const isAdmin = user?.role?.name === 'admin'
+  const { setSlot } = useContext(HeaderTabsContext)
 
   const handleLogout = () => {
     logout()
@@ -25,6 +29,9 @@ export default function AppHeader() {
 
       <nav className="app-nav">
         <Link to="/projects" className="app-nav-link">Proyectos</Link>
+        {/* Las páginas (p.ej. el detalle de proyecto) renderizan sus pestañas
+            aquí mediante un portal a este contenedor. */}
+        <div className="app-header-tabs" ref={setSlot} />
       </nav>
 
       <div className="app-user">
@@ -34,6 +41,7 @@ export default function AppHeader() {
         {isAdmin && (
           <Link to="/admin" className="app-nav-link app-nav-link-admin">Panel admin</Link>
         )}
+        <ThemeToggle />
         <button className="btn btn-sm" onClick={handleLogout}>Salir</button>
       </div>
     </header>

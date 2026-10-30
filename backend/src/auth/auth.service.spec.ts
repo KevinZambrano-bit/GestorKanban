@@ -3,11 +3,18 @@ import { AuthService } from './auth.service';
 import { JwtService } from '@nestjs/jwt';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { ConflictException, UnauthorizedException } from '@nestjs/common';
+import {
+  ConflictException,
+  UnauthorizedException,
+  BadRequestException,
+} from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 
 import { User } from '../users/entities/user.entity';
+import { PasswordResetToken } from './entities/password-reset-token.entity';
 import { RolesService } from '../roles/roles.service';
+import { MailService } from '../mail/mail.service';
+import { ConfigService } from '@nestjs/config';
 
 // Mock de bcrypt para evitar encriptación real en las pruebas
 jest.mock('bcrypt', () => ({
@@ -20,6 +27,8 @@ describe('AuthService', () => {
   let userRepository: jest.Mocked<Repository<User>>;
   let jwtService: jest.Mocked<JwtService>;
   let rolesService: jest.Mocked<RolesService>;
+  let mailService: jest.Mocked<MailService>;
+  let resetTokenRepository: jest.Mocked<Repository<PasswordResetToken>>;
 
   // Configuración del módulo de pruebas antes de cada prueba
   // Se simulan todas las dependencias con jest.fn()
@@ -38,6 +47,15 @@ describe('AuthService', () => {
           },
         },
         {
+          provide: getRepositoryToken(PasswordResetToken),
+          useValue: {
+            findOne: jest.fn(),
+            create: jest.fn(),
+            save: jest.fn(),
+            delete: jest.fn(),
+          },
+        },
+        {
           provide: JwtService,
           useValue: {
             sign: jest.fn(),
@@ -49,6 +67,18 @@ describe('AuthService', () => {
             findByName: jest.fn(),
           },
         },
+        {
+          provide: MailService,
+          useValue: {
+            sendPasswordResetEmail: jest.fn().mockResolvedValue({ sent: true }),
+          },
+        },
+        {
+          provide: ConfigService,
+          useValue: {
+            get: jest.fn(() => 'http://localhost:5173'),
+          },
+        },
       ],
     }).compile();
 
@@ -56,6 +86,8 @@ describe('AuthService', () => {
     userRepository = module.get(getRepositoryToken(User));
     jwtService = module.get(JwtService);
     rolesService = module.get(RolesService);
+    mailService = module.get(MailService);
+    resetTokenRepository = module.get(getRepositoryToken(PasswordResetToken));
   });
 
   // Limpia todos los mocks después de cada prueba

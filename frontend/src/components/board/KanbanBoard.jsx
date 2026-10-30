@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   DndContext,
   PointerSensor,
@@ -44,7 +44,13 @@ function groupTasks(tasks) {
   return groups
 }
 
-export default function KanbanBoard({ projectId, project, members, myRole }) {
+export default function KanbanBoard({
+  projectId,
+  project,
+  members,
+  myRole,
+  taskToOpen,
+}) {
   const {
     tasks,
     loading,
@@ -144,16 +150,33 @@ export default function KanbanBoard({ projectId, project, members, myRole }) {
     })
   }
 
-  const handleOpenDetail = (task) => {
-    setDetailTask(task)
-    setDetailNumber(task.taskNumber)
-    setDetailLoading(true)
-    setDetailError('')
-    getTask(task.taskNumber)
-      .then((data) => setDetailTask(data))
-      .catch((err) => setError(err.message))
-      .finally(() => setDetailLoading(false))
-  }
+  const handleOpenDetail = useCallback(
+    (task) => {
+      setDetailTask(task)
+      setDetailNumber(task.taskNumber)
+      setDetailLoading(true)
+      setDetailError('')
+      getTask(task.taskNumber)
+        .then((data) => setDetailTask(data))
+        .catch((err) => setError(err.message))
+        .finally(() => setDetailLoading(false))
+    },
+    [getTask, setError]
+  )
+
+  // Enlace profundo desde el correo de asignación: ?tarea=<número> abre el
+  // detalle de esa tarea. Espera a que las tareas estén cargadas y se dispara
+  // una sola vez por cada petición (el nonce cambia al pulsar el enlace otra
+  // vez). Si el número ya no existe, no se abre nada: el tablero sigue igual.
+  const handledOpenRef = useRef(null)
+  useEffect(() => {
+    if (!taskToOpen || loading) return
+    if (handledOpenRef.current === taskToOpen.nonce) return
+
+    const match = tasks.find((t) => t.taskNumber === taskToOpen.number)
+    handledOpenRef.current = taskToOpen.nonce
+    if (match) handleOpenDetail(match)
+  }, [taskToOpen, tasks, loading, handleOpenDetail])
 
   // Soltar fuera de una columna o cancelar con Escape: deshace la vista previa
   // que handleDragOver aplicó sobre items

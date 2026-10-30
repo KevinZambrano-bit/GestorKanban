@@ -8,7 +8,9 @@ import { AuthController } from './auth.controller';
 import { GoogleStrategy } from './strategies/google.strategy';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { User } from '../users/entities/user.entity';
+import { PasswordResetToken } from './entities/password-reset-token.entity';
 import { RolesModule } from '../roles/roles.module';
+import { MailModule } from '../mail/mail.module';
 
 const googleStrategyProvider = {
   provide: GoogleStrategy,
@@ -22,8 +24,9 @@ const googleStrategyProvider = {
 @Module({
   imports: [
     PassportModule,
-    TypeOrmModule.forFeature([User]),
+    TypeOrmModule.forFeature([User, PasswordResetToken]),
     RolesModule,
+    MailModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

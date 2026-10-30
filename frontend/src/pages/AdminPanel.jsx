@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import api from "../services/api";
 import useAuth from "../hooks/useAuth";
 import { TASK_STATUSES } from "../hooks/useTasks";
 import { getAvatarUrl } from "../utils/avatar";
+import ConfirmDialog from "../components/ConfirmDialog";
 
 const ROLE_LABELS = { admin: "Admin", user: "Usuario" };
 
@@ -19,6 +21,11 @@ export default function AdminPanel() {
   const [usersError, setUsersError] = useState("");
   const [pendingUserId, setPendingUserId] = useState(null);
   const [actionMsg, setActionMsg] = useState({ type: "", text: "" });
+  const [removingUser, setRemovingUser] = useState(null);
+
+  const [projects, setProjects] = useState([]);
+  const [projectsLoading, setProjectsLoading] = useState(true);
+  const [projectsError, setProjectsError] = useState("");
 
   const loadStats = useCallback(async () => {
     setStatsLoading(true);
@@ -39,9 +46,28 @@ export default function AdminPanel() {
     setUsers(Array.isArray(data) ? [...data].sort((a, b) => a.id - b.id) : []);
   }, []);
 
+  // El admin puede ver TODOS los proyectos de la plataforma, no solo en los
+  // que participa. Desde aquí entra a cualquiera para gestionarlo.
+  const loadProjects = useCallback(async () => {
+    setProjectsLoading(true);
+    setProjectsError("");
+    try {
+      const data = await api.get("/projects/admin/all");
+      setProjects(Array.isArray(data) ? data : []);
+    } catch (err) {
+      setProjectsError(err.message);
+    } finally {
+      setProjectsLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     loadStats();
   }, [loadStats]);
+
+  useEffect(() => {
+    loadProjects();
+  }, [loadProjects]);
 
   useEffect(() => {
     let cancelled = false;
@@ -85,6 +111,17 @@ export default function AdminPanel() {
     } finally {
       setPendingUserId(null);
     }
+  };
+
+  // Si falla, ConfirmDialog muestra el error dentro del modal
+  const handleDeleteUser = async () => {
+    await api.delete(`/users/${removingUser.id}`);
+    setRemovingUser(null);
+    await loadUsers();
+    setActionMsg({
+      type: "success",
+      text: `${removingUser.name} ha sido eliminado de la plataforma`,
+    });
   };
 
   return (
@@ -160,6 +197,7 @@ export default function AdminPanel() {
                   <th>Usuario</th>
                   <th>Email</th>
                   <th>Rol global</th>
+                  <th>Acciones</th>
                 </tr>
               </thead>
               <tbody>
@@ -211,6 +249,22 @@ export default function AdminPanel() {
                           )}
                         </div>
                       </td>
+                      <td>
+                        {/* El admin no puede borrarse a sí mismo: la
+                            plataforma podría quedarse sin administradores. */}
+                        <button
+                          className="btn btn-danger btn-sm"
+                          onClick={() => setRemovingUser(u)}
+                          disabled={isMe}
+                          title={
+                            isMe
+                              ? "No puedes eliminar tu propia cuenta"
+                              : undefined
+                          }
+                        >
+                          Eliminar
+                        </button>
+                      </td>
                     </tr>
                   );
                 })}
@@ -219,6 +273,67 @@ export default function AdminPanel() {
           </div>
         )}
       </section>
+
+      <section className="admin-section">
+        <h2>Proyectos</h2>
+        {projectsLoading ? (
+          <p className="loading">Cargando proyectos...</p>
+        ) : projectsError ? (
+          <div className="admin-error">
+            <p className="error">{projectsError}</p>
+            <button className="btn btn-sm" onClick={loadProjects}>
+              Reintentar
+            </button>
+          </div>
+        ) : projects.length === 0 ? (
+          <div className="empty-state">
+            <p>No hay proyectos registrados.</p>
+          </div>
+        ) : (
+          <div className="admin-table-wrap">
+            <table className="admin-table">
+              <thead>
+                <tr>
+                  <th>Proyecto</th>
+                  <th>Creador</th>
+                  <th>Visibilidad</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {projects.map((p) => (
+                  <tr key={p.id}>
+                    <td>{p.name}</td>
+                    <td className="admin-email">{p.createdBy?.name}</td>
+                    <td>{p.isPublic ? "Público" : "Privado"}</td>
+                    <td>
+                      <Link to={`/projects/${p.id}`} className="btn btn-sm">
+                        Gestionar
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+
+      {removingUser && (
+        <ConfirmDialog
+          variant="danger"
+          title="Eliminar usuario"
+          message={
+            <p>
+              ¿Eliminar a {removingUser.name} de la plataforma? Se borrará su
+              cuenta y no podrá iniciar sesión de nuevo.
+            </p>
+          }
+          confirmText="Eliminar"
+          onCancel={() => setRemovingUser(null)}
+          onConfirm={handleDeleteUser}
+        />
+      )}
     </div>
   );
 }

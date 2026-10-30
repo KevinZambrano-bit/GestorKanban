@@ -20,6 +20,10 @@ import { UpdateTaskDto } from './dto/update-task.dto';
 import { MoveTaskDto } from './dto/move-task.dto';
 import { UpdateSubtaskDto } from './dto/update-subtask.dto';
 import { AiClientService } from '../ai-client/ai-client.service';
+import { MailService } from '../mail/mail.service';
+import { taskUrl } from '../common/app-urls';
+import { userIsGlobalAdmin } from '../common/global-admin';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class TasksService {
@@ -35,6 +39,8 @@ export class TasksService {
     @InjectRepository(User)
     private userRepository: Repository<User>,
     private aiClient: AiClientService,
+    private mailService: MailService,
+    private configService: ConfigService,
   ) {}
 
   // Crear tarea en un proyecto
@@ -93,7 +99,13 @@ export class TasksService {
       assignee,
     });
 
-    return this.taskRepository.save(task);
+    const saved = await this.taskRepository.save(task);
+
+    if (assignee) {
+      await this.notifyAssignment(saved, assignee.id, userId);
+    }
+
+    return saved;
   }
 
   // Listar tareas de un proyecto
@@ -150,6 +162,8 @@ export class TasksService {
     const task = await this.findOne(taskNumber, projectId, userId);
     await this.checkMemberPermission(task.project.id, userId);
 
+    let newAssigneeId: number | null = null;
+
     if (updateTaskDto.assigneeId) {
       // Verificar que el usuario sea miembro del proyecto
       const isMember = await this.memberRepository.findOne({
@@ -168,6 +182,10 @@ export class TasksService {
         where: { id: updateTaskDto.assigneeId },
       });
       task.assignee = assignee;
+
+      // Solo se avisa si la asignación cambia de verdad: reenviar el mismo
+      // DTO en cada edición del título llenaría la bandeja de entrada.
+      if (task.assignee?.id !== userId) newAssigneeId = assignee.id;
     }
 
     if (updateTaskDto.title) task.title = updateTaskDto.title;
@@ -175,7 +193,13 @@ export class TasksService {
     if (updateTaskDto.startDate) task.startDate = updateTaskDto.startDate;
     if (updateTaskDto.endDate) task.endDate = updateTaskDto.endDate;
 
-    return this.taskRepository.save(task);
+    const saved = await this.taskRepository.save(task);
+
+    if (newAssigneeId) {
+      await this.notifyAssignment(saved, newAssigneeId, userId);
+    }
+
+    return saved;
   }
 
   // Mover tarea por taskNumber
@@ -412,10 +436,14 @@ export class TasksService {
     const membership = await this.memberRepository.findOne({
       where: { project: { id: projectId }, user: { id: userId } },
     });
-    if (!membership)
-      throw new ForbiddenException(
-        'Este proyecto es privado. Solo sus miembros pueden ver sus tareas',
-      );
+    if (membership) return;
+
+    // El admin global puede ver las tareas de cualquier proyecto.
+    if (await userIsGlobalAdmin(this.userRepository, userId)) return;
+
+    throw new ForbiddenException(
+      'Este proyecto es privado. Solo sus miembros pueden ver sus tareas',
+    );
   }
 
   // Verifica que el usuario sea MEMBER o LEADER
@@ -426,14 +454,17 @@ export class TasksService {
     const membership = await this.memberRepository.findOne({
       where: { project: { id: projectId }, user: { id: userId } },
     });
-    if (!membership) {
-      throw new ForbiddenException(
-        'Necesitas ser miembro del proyecto para realizar esta acción',
-      );
-    }
+    if (membership) return;
+
+    // El admin global puede gestionar las tareas de cualquier proyecto.
+    if (await userIsGlobalAdmin(this.userRepository, userId)) return;
+
+    throw new ForbiddenException(
+      'Necesitas ser miembro del proyecto para realizar esta acción',
+    );
   }
 
-  // Verifica que el usuario sea LEADER
+  // Verifica que el usuario sea LEADER o admin global
   private async checkLeaderPermission(
     projectId: number,
     userId: number,
@@ -445,7 +476,53 @@ export class TasksService {
         role: ProjectRole.LEADER,
       },
     });
-    if (!membership)
-      throw new ForbiddenException('Solo el líder puede realizar esta acción');
+    if (membership) return;
+
+    // El admin global actúa como líder de cualquier proyecto.
+    if (await userIsGlobalAdmin(this.userRepository, userId)) return;
+
+    throw new ForbiddenException('Solo el líder puede realizar esta acción');
+  }
+
+  /**
+   * Avisa por correo a la persona a la que se acaba de asignar una tarea.
+   * MailService nunca lanza, así que un fallo de envío no rompe la asignación.
+   */
+  private async notifyAssignment(
+    task: Task,
+    assigneeId: number,
+    assignedById: number,
+  ): Promise<void> {
+    // Asignarse a uno mismo no es una notificación: la persona ya lo ve en su
+    // propio tablero y el correo solo sería ruido.
+    if (assigneeId === assignedById) return;
+
+    const [assignee, assignedBy] = await Promise.all([
+      this.userRepository.findOne({ where: { id: assigneeId } }),
+      this.userRepository.findOne({ where: { id: assignedById } }),
+    ]);
+
+    if (!assignee) return;
+
+    await this.mailService.sendTaskAssignedEmail({
+      to: assignee.email,
+      name: assignee.name,
+      taskTitle: task.title,
+      taskNumber: task.taskNumber,
+      projectName: task.project?.name ?? 'un proyecto',
+      assignedByName: assignedBy?.name ?? 'Un miembro del equipo',
+      taskUrl: taskUrl(this.configService, task.project?.id, task.taskNumber),
+      dueDate: this.formatDate(task.endDate),
+    });
+  }
+
+  private formatDate(date: Date | string | null | undefined): string | null {
+    if (!date) return null;
+    // Las fechas se guardan como 'YYYY-MM-DD' (columna date), que al
+    // interpretarse como UTC puede retroceder un día en husos negativos.
+    const raw = typeof date === 'string' ? date : date.toISOString();
+    const [year, month, day] = raw.slice(0, 10).split('-');
+    if (!year || !month || !day) return raw;
+    return `${day}/${month}/${year}`;
   }
 }

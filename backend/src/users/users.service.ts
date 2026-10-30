@@ -88,7 +88,18 @@ export class UsersService {
     return this.userRepository.save(user);
   }
 
-  async remove(id: number): Promise<{ message: string }> {
+  // actorId es quien hace la petición: un admin no puede borrarse a sí mismo,
+  // para que la plataforma no se quede sin administradores.
+  async remove(
+    id: number,
+    actorId?: number,
+  ): Promise<{ message: string }> {
+    if (actorId === id) {
+      throw new BadRequestException(
+        'No puedes eliminar tu propia cuenta de administrador',
+      );
+    }
+
     const user = await this.findOne(id);
     await this.userRepository.remove(user);
     return { message: `Usuario ${user.name} eliminado correctamente` };

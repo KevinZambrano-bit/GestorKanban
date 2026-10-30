@@ -3,6 +3,7 @@ import { TasksController } from './tasks.controller';
 import { TasksService } from './tasks.service';
 import { TaskStatus } from './entities/task.entity';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import { User } from '../users/entities/user.entity';
 import { ProjectMember } from '../projects/entities/project-member.entity';
 import { Project } from '../projects/entities/project.entity';
 
@@ -25,6 +26,12 @@ describe('TasksController', () => {
             remove: jest.fn(),
             moveTask: jest.fn(),
             findMyTasks: jest.fn(),
+          },
+        },
+        {
+          provide: getRepositoryToken(User),
+          useValue: {
+            findOne: jest.fn(),
           },
         },
         {

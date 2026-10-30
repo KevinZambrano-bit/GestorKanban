@@ -15,14 +15,18 @@ export function AuthProvider({ children }) {
     }
   }, [user]);
 
+  function finishAuth(data) {
+    localStorage.setItem("token", data.access_token);
+    localStorage.setItem("user", JSON.stringify(data.user));
+    setUser(data.user);
+    return data;
+  }
+
   async function login(email, password) {
     setLoading(true);
     try {
       const data = await api.post("/auth/login", { email, password });
-      localStorage.setItem("token", data.access_token);
-      localStorage.setItem("user", JSON.stringify(data.user));
-      setUser(data.user);
-      return data;
+      return finishAuth(data);
     } finally {
       setLoading(false);
     }
@@ -32,10 +36,7 @@ export function AuthProvider({ children }) {
     setLoading(true);
     try {
       const data = await api.post("/auth/register", { name, email, password });
-      localStorage.setItem("token", data.access_token);
-      localStorage.setItem("user", JSON.stringify(data.user));
-      setUser(data.user);
-      return data;
+      return finishAuth(data);
     } finally {
       setLoading(false);
     }

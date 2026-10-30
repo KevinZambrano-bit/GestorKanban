@@ -9,6 +9,7 @@ import {
 import { User } from '../../users/entities/user.entity';
 import { Task } from '../../tasks/entities/task.entity';
 import { ProjectMember } from './project-member.entity';
+import { ProjectInvitation } from './project-invitation.entity';
 
 @Entity('projects')
 export class Project {
@@ -38,4 +39,7 @@ export class Project {
 
   @OneToMany(() => Task, (t) => t.project)
   tasks: Task[];
+
+  @OneToMany(() => ProjectInvitation, (i) => i.project)
+  invitations: ProjectInvitation[];
 }

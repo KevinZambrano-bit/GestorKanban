@@ -82,7 +82,11 @@ export class UsersController {
   @RequireGlobalRole('admin')
   @ApiOperation({ summary: 'Eliminar usuario' })
   @ApiResponse({ status: 200, description: 'Usuario eliminado' })
-  remove(@Param('id') id: string) {
-    return this.usersService.remove(+id);
+  @ApiResponse({
+    status: 400,
+    description: 'Un admin no puede eliminar su propia cuenta',
+  })
+  remove(@Param('id') id: string, @Req() req) {
+    return this.usersService.remove(+id, req.user.id);
   }
 }

@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ProjectsController } from './projects.controller';
 import { ProjectsService } from './projects.service';
+import { InvitationsService } from './invitations.service';
 import { ProjectRole } from './entities/project-member.entity';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { User } from '../users/entities/user.entity';
@@ -11,6 +12,7 @@ import { UpdateWipDto } from './dto/update-wip.dto';
 describe('ProjectsController', () => {
   let controller: ProjectsController;
   let projectsService: jest.Mocked<ProjectsService>;
+  let invitationsService: jest.Mocked<InvitationsService>;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -25,10 +27,19 @@ describe('ProjectsController', () => {
             findOne: jest.fn(),
             update: jest.fn(),
             remove: jest.fn(),
-            inviteMember: jest.fn(),
             getProjectMembers: jest.fn(),
             removeMember: jest.fn(),
             updateWipLimit: jest.fn(),
+          },
+        },
+        {
+          provide: InvitationsService,
+          useValue: {
+            inviteMember: jest.fn(),
+            findByProject: jest.fn(),
+            revoke: jest.fn(),
+            findByToken: jest.fn(),
+            accept: jest.fn(),
           },
         },
         {
@@ -54,6 +65,7 @@ describe('ProjectsController', () => {
 
     controller = module.get<ProjectsController>(ProjectsController);
     projectsService = module.get(ProjectsService);
+    invitationsService = module.get(InvitationsService);
   });
 
   afterEach(() => {
@@ -244,34 +256,47 @@ describe('ProjectsController', () => {
   // ─────────────────────────────────────────────
 
   describe('inviteMember', () => {
-    it('debe invitar un miembro al proyecto', async () => {
-      const projectId = '1';
-      const userId = 1;
-
-      const inviteMemberDto = {
-        email: 'newuser@test.com',
-        role: ProjectRole.MEMBER,
-      };
+    it('debe delegar en InvitationsService con los argumentos sueltos', async () => {
+      const req = { user: { id: 1 } };
 
       const response = {
-        message: 'New User agregado como member correctamente',
+        message: 'Invitación enviada a newuser@test.com',
+        emailSent: true,
       };
-
-      projectsService.inviteMember.mockResolvedValue(response);
-
-      const req = { user: { id: userId } };
+      invitationsService.inviteMember.mockResolvedValue(response);
 
       const result = await controller.inviteMember(
-        projectId,
-        inviteMemberDto,
+        '1',
+        { email: 'newuser@test.com', role: ProjectRole.LEADER },
         req,
       );
 
       expect(result).toEqual(response);
-      expect(projectsService.inviteMember).toHaveBeenCalledWith(
+      expect(invitationsService.inviteMember).toHaveBeenCalledWith(
         1,
-        inviteMemberDto,
-        userId,
+        'newuser@test.com',
+        ProjectRole.LEADER,
+        1,
+      );
+    });
+
+    it('debe aplicar MEMBER cuando no viene rol', async () => {
+      invitationsService.inviteMember.mockResolvedValue({
+        message: 'ok',
+        emailSent: true,
+      });
+
+      await controller.inviteMember(
+        '1',
+        { email: 'newuser@test.com' },
+        { user: { id: 1 } },
+      );
+
+      expect(invitationsService.inviteMember).toHaveBeenCalledWith(
+        1,
+        'newuser@test.com',
+        ProjectRole.MEMBER,
+        1,
       );
     });
   });

@@ -311,67 +311,6 @@ describe('ProjectsService', () => {
     });
   });
 
-  // ─────────────────────────────────────────────
-  // INVITE MEMBER
-  // ─────────────────────────────────────────────
-
-  describe('inviteMember', () => {
-    it('debe invitar un nuevo miembro al proyecto', async () => {
-      const projectId = 1;
-      const userId = 1;
-
-      const inviteMemberDto = {
-        email: 'newuser@test.com',
-        role: ProjectRole.MEMBER,
-      };
-
-      const project = { id: projectId, name: 'Proyecto' };
-      const newUser = { id: 2, name: 'New User', email: 'newuser@test.com' };
-
-      memberRepository.findOne.mockResolvedValueOnce({
-        role: ProjectRole.LEADER,
-      } as any);
-      projectRepository.findOne.mockResolvedValue(project as any);
-      userRepository.findOne.mockResolvedValue(newUser as any);
-      memberRepository.findOne.mockResolvedValueOnce(null);
-
-      const member = {
-        project,
-        user: newUser,
-        role: ProjectRole.MEMBER,
-      };
-      memberRepository.create.mockReturnValue(member as any);
-      memberRepository.save.mockResolvedValue(member as any);
-
-      const result = await service.inviteMember(
-        projectId,
-        inviteMemberDto,
-        userId,
-      );
-
-      expect(result.message).toContain('agregado');
-      expect(memberRepository.save).toHaveBeenCalled();
-    });
-
-    it('debe lanzar error si el usuario no existe', async () => {
-      const projectId = 1;
-      const userId = 1;
-
-      const inviteMemberDto = {
-        email: 'nonexistent@test.com',
-      };
-
-      const project = { id: projectId };
-
-      memberRepository.findOne.mockResolvedValueOnce({
-        role: ProjectRole.LEADER,
-      } as any);
-      projectRepository.findOne.mockResolvedValue(project as any);
-      userRepository.findOne.mockResolvedValue(null);
-
-      await expect(
-        service.inviteMember(projectId, inviteMemberDto, userId),
-      ).rejects.toThrow(NotFoundException);
-    });
-  });
+  // Nota: la invitación por email (con envío de correo y soporte para
+  // invitados sin cuenta) se prueba en invitations.service.spec.ts.
 });

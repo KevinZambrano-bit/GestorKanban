@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import ThemeToggle from '../components/ThemeToggle'
 import './Landing.css'
 
 const AV = ['#a855f7', '#6366f1', '#ec4899', '#14b8a6', '#f59e0b', '#64748b']
@@ -67,6 +68,7 @@ export default function Landing() {
             <Logo />Gestor <span>Kanban</span>
           </Link>
           <nav className="lp-nav-r" aria-label="Acceso">
+            <ThemeToggle />
             <Link to="/login" className="lp-textlink">Iniciar sesión</Link>
             <Link to="/register" className="lp-btn lp-btn-solid lp-btn-sm">Crear cuenta</Link>
           </nav>
