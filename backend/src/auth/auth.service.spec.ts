@@ -92,7 +92,15 @@ describe('AuthService', () => {
 
       const result = await service.register(dto);
 
-      expect(result).toEqual({ access_token: 'fake-jwt' });
+      expect(result).toMatchObject({
+        access_token: 'fake-jwt',
+        user: {
+          id: 1,
+          name: 'Kevin',
+          email: 'kevin@test.com',
+          role,
+        },
+      });
       expect(userRepository.create).toHaveBeenCalled();
       expect(userRepository.save).toHaveBeenCalled();
     });
@@ -132,7 +140,69 @@ describe('AuthService', () => {
 
       const result = await service.login(loginDto);
 
-      expect(result).toEqual({ access_token: 'fake-jwt' });
+      expect(result).toMatchObject({
+        access_token: 'fake-jwt',
+        user: {
+          id: 1,
+          email: 'kevin@test.com',
+          role: { name: 'admin' },
+        },
+      });
+    });
+
+    it('debe lanzar error si la contraseña es incorrecta', async () => {
+      userRepository.findOne.mockResolvedValue({
+        id: 1,
+        email: 'kevin@test.com',
+        password: 'hashedPassword',
+        role: { name: 'admin' },
+      } as User);
+      (bcrypt.compare as jest.Mock).mockResolvedValue(false);
+
+      await expect(
+        service.login({
+          email: 'kevin@test.com',
+          password: 'wrong-password',
+        }),
+      ).rejects.toThrow(UnauthorizedException);
+    });
+
+    it('debe rechazar el login normal de una cuenta de Google', async () => {
+      userRepository.findOne.mockResolvedValue({
+        id: 1,
+        email: 'google@test.com',
+        password: null,
+        role: { name: 'user' },
+      } as User);
+
+      await expect(
+        service.login({
+          email: 'google@test.com',
+          password: 'any-password',
+        }),
+      ).rejects.toThrow(UnauthorizedException);
+      expect(bcrypt.compare).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('getProfile', () => {
+    it('debe buscar el perfil por ID incluyendo el rol', async () => {
+      const userId = 7;
+      const user = {
+        id: userId,
+        name: 'Kevin',
+        email: 'kevin@test.com',
+        role: { id: 1, name: 'admin' },
+      } as User;
+      userRepository.findOne.mockResolvedValue(user);
+
+      const result = await service.getProfile(userId);
+
+      expect(result).toBe(user);
+      expect(userRepository.findOne).toHaveBeenCalledWith({
+        where: { id: userId },
+        relations: ['role'],
+      });
     });
   });
 });
