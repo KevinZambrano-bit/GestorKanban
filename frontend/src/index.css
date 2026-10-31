@@ -27,7 +27,9 @@
   --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
   --mono: ui-monospace, Consolas, monospace;
 
-  font: 17px/145% var(--sans);
+  /* Escala global del texto: todos los font-size estan en rem, asi que
+     cambiar este numero escala toda la aplicacion (1.3 = +30%). */
+  font: 1.3rem/145% var(--sans);
   letter-spacing: 0.1px;
   color-scheme: light;
   color: var(--text);
@@ -36,6 +38,10 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-size: 1.0625rem;
 }
 
 /* --- Modo oscuro --- */
@@ -86,8 +92,8 @@ h1, h2 {
   letter-spacing: -0.3px;
 }
 
-h1 { font-size: 29px; margin: 0 0 4px; }
-h2 { font-size: 21px; line-height: 128%; margin: 0 0 8px; }
+h1 { font-size: 1.8125rem; margin: 0 0 4px; }
+h2 { font-size: 1.3125rem; line-height: 128%; margin: 0 0 8px; }
 p { margin: 0; }
 
 code, .counter {
@@ -97,7 +103,7 @@ code, .counter {
   color: var(--text-h);
 }
 code {
-  font-size: 16px;
+  font-size: 1rem;
   line-height: 135%;
   padding: 4px 8px;
   background: var(--code-bg);
@@ -124,7 +130,7 @@ code {
   align-items: center;
   gap: 8px;
   font-weight: 600;
-  font-size: 16px;
+  font-size: 1rem;
   color: var(--text-h);
   text-decoration: none;
 }
@@ -137,7 +143,7 @@ code {
 .app-nav-link {
   padding: 6px 10px;
   border-radius: 6px;
-  font-size: 15px;
+  font-size: 0.9375rem;
   color: var(--text);
   text-decoration: none;
 }
@@ -151,7 +157,7 @@ code {
   gap: 8px;
 }
 .app-user-name {
-  font-size: 15px;
+  font-size: 0.9375rem;
   color: var(--text-h);
   font-weight: 500;
 }
@@ -170,8 +176,8 @@ h1, h2 {
   letter-spacing: -0.3px;
 }
 
-h1 { font-size: 29px; margin: 0 0 4px; }
-h2 { font-size: 21px; line-height: 128%; margin: 0 0 8px; }
+h1 { font-size: 1.8125rem; margin: 0 0 4px; }
+h2 { font-size: 1.3125rem; line-height: 128%; margin: 0 0 8px; }
 p { margin: 0; }
 
 code, .counter {
@@ -181,7 +187,7 @@ code, .counter {
   color: var(--text-h);
 }
 code {
-  font-size: 16px;
+  font-size: 1rem;
   line-height: 135%;
   padding: 4px 8px;
   background: var(--code-bg);
@@ -208,7 +214,7 @@ code {
   align-items: center;
   gap: 8px;
   font-weight: 600;
-  font-size: 16px;
+  font-size: 1rem;
   color: var(--text-h);
   text-decoration: none;
 }
@@ -221,7 +227,7 @@ code {
 .app-nav-link {
   padding: 6px 10px;
   border-radius: 6px;
-  font-size: 15px;
+  font-size: 0.9375rem;
   color: var(--text);
   text-decoration: none;
 }
@@ -235,7 +241,7 @@ code {
   gap: 8px;
 }
 .app-user-name {
-  font-size: 15px;
+  font-size: 0.9375rem;
   color: var(--text-h);
   font-weight: 500;
 }
@@ -259,21 +265,21 @@ h2 {
 }
 
 h1 {
-  font-size: 57px;
+  font-size: 3.5625rem;
   letter-spacing: -1.68px;
   margin: 32px 0;
   @media (max-width: 1024px) {
-    font-size: 37px;
+    font-size: 2.3125rem;
     margin: 20px 0;
   }
 }
 h2 {
-  font-size: 25px;
+  font-size: 1.5625rem;
   line-height: 118%;
   letter-spacing: -0.24px;
   margin: 0 0 8px;
   @media (max-width: 1024px) {
-    font-size: 21px;
+    font-size: 1.3125rem;
   }
 }
 p {
@@ -289,7 +295,7 @@ code,
 }
 
 code {
-  font-size: 16px;
+  font-size: 1rem;
   line-height: 135%;
   padding: 4px 8px;
   background: var(--code-bg);
@@ -320,11 +326,11 @@ code {
   align-items: center;
   gap: 8px;
   font-weight: 600;
-  font-size: 16px;
+  font-size: 1rem;
   color: var(--accent);
 }
 .auth-hero-title {
-  font-size: 35px;
+  font-size: 2.1875rem;
   line-height: 1.2;
   font-weight: 600;
   color: #fff;
@@ -333,7 +339,7 @@ code {
 }
 .auth-hero-sub {
   color: rgba(255, 255, 255, 0.6);
-  font-size: 16px;
+  font-size: 1rem;
   max-width: 380px;
 }
 
@@ -354,7 +360,7 @@ code {
   gap: 8px;
 }
 .mini-col-title {
-  font-size: 11px;
+  font-size: 0.6875rem;
   color: rgba(255, 255, 255, 0.45);
   font-weight: 500;
 }
@@ -397,7 +403,7 @@ code {
   padding: 6px 12px 6px 9px;
   margin-left: -9px;
   border-radius: 8px;
-  font-size: 15px;
+  font-size: 0.9375rem;
   font-weight: 500;
   color: var(--text);
   text-decoration: none;
@@ -409,14 +415,14 @@ code {
 }
 .auth-back svg { transition: transform 0.15s; }
 .auth-back:hover svg { transform: translateX(-2px); }
-.auth-form-title { font-size: 27px; margin-bottom: 4px; }
-.auth-form-sub { color: var(--text); font-size: 15px; margin-bottom: 28px; }
+.auth-form-title { font-size: 1.6875rem; margin-bottom: 4px; }
+.auth-form-sub { color: var(--text); font-size: 0.9375rem; margin-bottom: 28px; }
 .auth-form-card form { display: flex; flex-direction: column; gap: 16px; }
 .auth-form-card label {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  font-size: 15px;
+  font-size: 0.9375rem;
   color: var(--text);
   text-align: left;
 }
@@ -424,7 +430,7 @@ code {
   padding: 11px 12px;
   border: 1px solid var(--border);
   border-radius: 8px;
-  font-size: 16px;
+  font-size: 1rem;
   background: var(--bg);
   color: var(--text-h);
   transition: border-color 0.15s, box-shadow 0.15s;
@@ -454,7 +460,7 @@ code {
 .btn-block {
   width: 100%;
   padding: 11px;
-  font-size: 16px;
+  font-size: 1rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -516,7 +522,7 @@ code {
   align-items: center;
   gap: 10px;
   color: var(--text);
-  font-size: 14px;
+  font-size: 0.875rem;
   margin: 20px 0;
 }
 .auth-divider::before,
@@ -527,7 +533,7 @@ code {
   background: var(--border);
 }
 .btn-google { display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; }
-.auth-switch { margin-top: 20px; font-size: 15px; color: var(--text); text-align: center; }
+.auth-switch { margin-top: 20px; font-size: 0.9375rem; color: var(--text); text-align: center; }
 .auth-switch a { color: var(--accent); font-weight: 500; }
 
 .centered-page {
@@ -553,7 +559,7 @@ code {
   border-radius: 6px;
   background: var(--danger-bg);
   color: var(--danger);
-  font-size: 15px;
+  font-size: 0.9375rem;
 }
 
 .success {
@@ -561,7 +567,7 @@ code {
   border-radius: 6px;
   background: var(--success-bg);
   color: var(--success);
-  font-size: 15px;
+  font-size: 0.9375rem;
 }
 
 /* --- Buttons --- */
@@ -571,7 +577,7 @@ code {
   border-radius: 6px;
   background: var(--bg);
   color: var(--text-h);
-  font-size: 15px;
+  font-size: 0.9375rem;
   cursor: pointer;
   transition: border-color 0.2s;
 }
@@ -604,7 +610,7 @@ code {
 }
 .btn-sm {
   padding: 4px 10px;
-  font-size: 14px;
+  font-size: 0.875rem;
 }
 .btn-back {
   border: none;
@@ -613,7 +619,7 @@ code {
   cursor: pointer;
   padding: 0;
   margin-bottom: 16px;
-  font-size: 15px;
+  font-size: 0.9375rem;
 }
 .btn-back:hover {
   color: var(--accent);
@@ -650,7 +656,7 @@ code {
   display: inline-block;
   padding: 2px 8px;
   border-radius: 10px;
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 500;
 }
 .badge-leader {
@@ -693,12 +699,12 @@ code {
 }
 .dash-hero-text h1 {
   margin: 0;
-  font-size: 27px;
+  font-size: 1.6875rem;
   line-height: 1.2;
 }
 .dash-hero-sub {
   margin-top: 4px;
-  font-size: 16px;
+  font-size: 1rem;
 }
 .dash-actions {
   display: flex;
@@ -735,7 +741,7 @@ code {
   border-left: 1px solid var(--border);
 }
 .dash-stat-value {
-  font-size: 33px;
+  font-size: 2.0625rem;
   font-weight: 600;
   line-height: 1.1;
   color: var(--text-h);
@@ -743,7 +749,7 @@ code {
   letter-spacing: -0.5px;
 }
 .dash-stat-label {
-  font-size: 14px;
+  font-size: 0.875rem;
 }
 .dash-rolebar {
   grid-column: 1 / -1;
@@ -770,7 +776,7 @@ code {
   transform-origin: left;
 }
 .dash-rolebar-caption {
-  font-size: 14px;
+  font-size: 0.875rem;
   white-space: nowrap;
 }
 @keyframes dash-grow {
@@ -788,10 +794,10 @@ code {
 }
 .dash-section-head h2 {
   margin: 0;
-  font-size: 19px;
+  font-size: 1.1875rem;
 }
 .dash-more {
-  font-size: 15px;
+  font-size: 0.9375rem;
   color: var(--accent);
   text-decoration: none;
 }
@@ -840,7 +846,7 @@ a.dash-card:hover {
 }
 .dash-card-head h3 {
   margin: 0;
-  font-size: 17px;
+  font-size: 1.0625rem;
   font-weight: 600;
   color: var(--text-h);
   line-height: 1.3;
@@ -850,7 +856,7 @@ a.dash-card:hover {
   flex-shrink: 0;
 }
 .dash-card-desc {
-  font-size: 15px;
+  font-size: 0.9375rem;
   flex: 1;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -866,7 +872,7 @@ a.dash-card:hover {
   display: flex;
   flex-wrap: wrap;
   gap: 4px 14px;
-  font-size: 13px;
+  font-size: 0.8125rem;
   padding-top: 10px;
   border-top: 1px solid var(--border);
 }
@@ -913,13 +919,13 @@ a.dash-card:hover {
 }
 .dash-empty h3 {
   margin: 0;
-  font-size: 19px;
+  font-size: 1.1875rem;
   font-weight: 600;
   color: var(--text-h);
 }
 .dash-empty p {
   max-width: 44ch;
-  font-size: 15px;
+  font-size: 0.9375rem;
   margin-bottom: 8px;
 }
 .dash-error {
@@ -984,11 +990,11 @@ a.dash-card:hover {
 }
 .projects-header h1 {
   margin: 0;
-  font-size: 29px;
+  font-size: 1.8125rem;
 }
 .projects-sub {
   margin-top: 4px;
-  font-size: 16px;
+  font-size: 1rem;
 }
 
 /* Filtro por rol */
@@ -1012,7 +1018,7 @@ a.dash-card:hover {
   border-radius: 6px;
   background: none;
   color: var(--text);
-  font-size: 15px;
+  font-size: 0.9375rem;
   white-space: nowrap;
   cursor: pointer;
   transition: background-color 0.15s, color 0.15s;
@@ -1027,7 +1033,7 @@ a.dash-card:hover {
   font-weight: 500;
 }
 .projects-filter-count {
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-variant-numeric: tabular-nums;
   opacity: 0.8;
 }
@@ -1086,7 +1092,7 @@ a.project-card:hover {
 }
 .project-card-header h2 {
   margin: 0;
-  font-size: 19px;
+  font-size: 1.1875rem;
   font-weight: 600;
   line-height: 1.3;
   overflow-wrap: anywhere;
@@ -1096,7 +1102,7 @@ a.project-card:hover {
   margin-top: 1px;
 }
 .project-card-desc {
-  font-size: 15px;
+  font-size: 0.9375rem;
   line-height: 1.5;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -1141,7 +1147,7 @@ a.project-card:hover {
   box-sizing: border-box;
 }
 .project-progress-label {
-  font-size: 13px;
+  font-size: 0.8125rem;
 }
 
 /* Pie: miembros y etiquetas */
@@ -1153,7 +1159,7 @@ a.project-card:hover {
   flex-wrap: wrap;
   padding-top: 12px;
   border-top: 1px solid var(--border);
-  font-size: 14px;
+  font-size: 0.875rem;
 }
 .project-members {
   display: flex;
@@ -1182,7 +1188,7 @@ a.project-card:hover {
   place-items: center;
   background: var(--canvas);
   color: var(--text-h);
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 600;
 }
 .project-tags {
@@ -1196,7 +1202,7 @@ a.project-card:hover {
   padding: 2px 8px;
   border: 1px solid var(--border);
   border-radius: 10px;
-  font-size: 13px;
+  font-size: 0.8125rem;
   white-space: nowrap;
 }
 
@@ -1208,7 +1214,7 @@ a.project-card:hover {
   border: 1px dashed var(--border);
   background: none;
   font: inherit;
-  font-size: 16px;
+  font-size: 1rem;
   font-weight: 500;
   color: var(--text);
   transition: border-color 0.2s, color 0.2s, background-color 0.2s;
@@ -1225,7 +1231,7 @@ a.project-card:hover {
   height: 40px;
   border-radius: 50%;
   border: 1px dashed currentColor;
-  font-size: 23px;
+  font-size: 1.4375rem;
   line-height: 1;
 }
 
@@ -1268,12 +1274,12 @@ a.project-card:hover {
 }
 .projects-empty h2 {
   margin: 0;
-  font-size: 21px;
+  font-size: 1.3125rem;
   font-weight: 600;
 }
 .projects-empty p {
   max-width: 46ch;
-  font-size: 15px;
+  font-size: 0.9375rem;
   line-height: 1.5;
   margin-bottom: 6px;
 }
@@ -1306,7 +1312,7 @@ a.project-card:hover {
 }
 .empty-state p {
   margin-bottom: 16px;
-  font-size: 17px;
+  font-size: 1.0625rem;
 }
 
 /* --- Modal --- */
@@ -1332,7 +1338,7 @@ a.project-card:hover {
 }
 .modal h2 {
   margin: 0 0 20px;
-  font-size: 23px;
+  font-size: 1.4375rem;
 }
 .modal form {
   display: flex;
@@ -1343,7 +1349,7 @@ a.project-card:hover {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  font-size: 15px;
+  font-size: 0.9375rem;
   color: var(--text);
 }
 .modal input[type="text"],
@@ -1355,7 +1361,7 @@ a.project-card:hover {
   padding: 8px 10px;
   border: 1px solid var(--border);
   border-radius: 6px;
-  font-size: 16px;
+  font-size: 1rem;
   background: var(--bg);
   color: var(--text-h);
   font-family: var(--sans);
@@ -1398,11 +1404,11 @@ a.project-card:hover {
 }
 .project-detail-header h1 {
   margin: 0 0 4px;
-  font-size: 29px;
+  font-size: 1.8125rem;
 }
 .project-detail-desc {
   color: var(--text);
-  font-size: 16px;
+  font-size: 1rem;
 }
 .project-detail-actions {
   display: flex;
@@ -1423,7 +1429,7 @@ a.project-card:hover {
   background: none;
   color: var(--text);
   cursor: pointer;
-  font-size: 15px;
+  font-size: 0.9375rem;
   border-bottom: 2px solid transparent;
   margin-bottom: -1px;
 }
@@ -1453,7 +1459,7 @@ a.project-card:hover {
 .header-tabs .tab {
   padding: 6px 12px;
   margin-bottom: 0;
-  font-size: 16px;
+  font-size: 1rem;
 }
 
 /* --- Project info --- */
@@ -1465,7 +1471,7 @@ a.project-card:hover {
 .info-row {
   display: flex;
   gap: 8px;
-  font-size: 16px;
+  font-size: 1rem;
 }
 .info-label {
   color: var(--text);
@@ -1490,7 +1496,7 @@ a.project-card:hover {
   padding: 8px 10px;
   border: 1px solid var(--border);
   border-radius: 6px;
-  font-size: 15px;
+  font-size: 0.9375rem;
   background: var(--bg);
   color: var(--text-h);
 }
@@ -1498,7 +1504,7 @@ a.project-card:hover {
   padding: 8px 10px;
   border: 1px solid var(--border);
   border-radius: 6px;
-  font-size: 15px;
+  font-size: 0.9375rem;
   background: var(--bg);
   color: var(--text-h);
 }
@@ -1524,11 +1530,11 @@ a.project-card:hover {
 .member-name {
   font-weight: 500;
   color: var(--text-h);
-  font-size: 15px;
+  font-size: 0.9375rem;
 }
 .member-email {
   color: var(--text);
-  font-size: 14px;
+  font-size: 0.875rem;
 }
 
 /* --- Invitaciones pendientes --- */
@@ -1542,7 +1548,7 @@ a.project-card:hover {
 }
 .invite-pending-title {
   margin: 0;
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 600;
   color: var(--text-h);
   text-transform: uppercase;
@@ -1565,7 +1571,7 @@ a.project-card:hover {
 }
 .invite-kicker {
   margin: 0;
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -1573,14 +1579,14 @@ a.project-card:hover {
 }
 .invite-title {
   margin: 0;
-  font-size: 25px;
+  font-size: 1.5625rem;
   font-weight: 700;
   letter-spacing: -0.4px;
   color: var(--text-h);
 }
 .invite-text {
   margin: 0;
-  font-size: 15px;
+  font-size: 0.9375rem;
   line-height: 1.6;
   color: var(--text);
 }
@@ -1601,7 +1607,7 @@ a.project-card:hover {
   padding: 12px 14px;
   border-radius: 8px;
   background: rgba(168, 85, 247, 0.08);
-  font-size: 15px;
+  font-size: 0.9375rem;
   line-height: 1.6;
   color: var(--text);
 }
@@ -1620,14 +1626,14 @@ a.project-card:hover {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  font-size: 15px;
+  font-size: 0.9375rem;
   color: var(--text);
 }
 .wip-section input {
   padding: 8px 10px;
   border: 1px solid var(--border);
   border-radius: 6px;
-  font-size: 16px;
+  font-size: 1rem;
   background: var(--bg);
   color: var(--text-h);
 }
@@ -1649,7 +1655,7 @@ a.project-card:hover {
   gap: 8px;
 }
 .kanban-summary {
-  font-size: 16px;
+  font-size: 1rem;
   color: var(--text);
 }
 .kanban-error {
@@ -1677,14 +1683,14 @@ a.project-card:hover {
 }
 .kanban-notice p {
   flex: 1;
-  font-size: 15px;
+  font-size: 0.9375rem;
   color: var(--text-h);
 }
 .kanban-notice-close {
   border: none;
   background: none;
   color: var(--text);
-  font-size: 21px;
+  font-size: 1.3125rem;
   line-height: 1;
   padding: 2px 6px;
   border-radius: 4px;
@@ -1758,7 +1764,7 @@ a.project-card:hover {
 .kanban-column-title {
   flex: 1;
   margin: 0;
-  font-size: 17px;
+  font-size: 1.0625rem;
   font-weight: 600;
   color: var(--text-h);
 }
@@ -1768,7 +1774,7 @@ a.project-card:hover {
   border-radius: 10px;
   background: var(--bg);
   border: 1px solid var(--border);
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 600;
   text-align: center;
   color: var(--text-h);
@@ -1781,7 +1787,7 @@ a.project-card:hover {
 }
 .kanban-column-note {
   margin: -4px 4px 0;
-  font-size: 14px;
+  font-size: 0.875rem;
   color: var(--text);
 }
 .kanban-wip {
@@ -1805,7 +1811,7 @@ a.project-card:hover {
   transition: width 0.3s ease;
 }
 .kanban-wip-label {
-  font-size: 14px;
+  font-size: 0.875rem;
   color: var(--text);
   white-space: nowrap;
 }
@@ -1824,7 +1830,7 @@ a.project-card:hover {
   padding: 14px;
   border: 1px dashed var(--border);
   border-radius: 8px;
-  font-size: 15px;
+  font-size: 0.9375rem;
   color: var(--text);
   text-align: center;
 }
@@ -1881,13 +1887,13 @@ a.project-card:hover {
   gap: 8px;
 }
 .kanban-task-num {
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 600;
   color: var(--text);
   font-variant-numeric: tabular-nums;
 }
 .kanban-task-status {
-  font-size: 13px;
+  font-size: 0.8125rem;
   color: var(--text);
   padding: 0 6px;
   border: 1px solid var(--border);
@@ -1895,14 +1901,14 @@ a.project-card:hover {
 }
 .kanban-task-title {
   margin: 0;
-  font-size: 16px;
+  font-size: 1rem;
   font-weight: 600;
   line-height: 1.35;
   color: var(--text-h);
   overflow-wrap: anywhere;
 }
 .kanban-task-desc {
-  font-size: 15px;
+  font-size: 0.9375rem;
   line-height: 1.5;
   color: var(--text);
   display: -webkit-box;
@@ -1919,7 +1925,7 @@ a.project-card:hover {
   margin-top: 4px;
   padding-top: 8px;
   border-top: 1px solid var(--border);
-  font-size: 14px;
+  font-size: 0.875rem;
   color: var(--text);
 }
 .kanban-assignee {
@@ -1954,7 +1960,7 @@ a.project-card:hover {
   align-items: center;
   gap: 5px;
   font: inherit;
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 500;
   cursor: pointer;
   transition: background-color 0.15s, border-color 0.15s, color 0.15s;
@@ -1984,7 +1990,7 @@ a.project-card:hover {
 }
 .quick-assign-heading {
   padding: 6px 8px 4px;
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: var(--text);
 }
@@ -2005,7 +2011,7 @@ a.project-card:hover {
   border-radius: 6px;
   background: none;
   font: inherit;
-  font-size: 15px;
+  font-size: 0.9375rem;
   color: var(--text-h);
   text-align: left;
   cursor: pointer;
@@ -2037,16 +2043,16 @@ a.project-card:hover {
   white-space: nowrap;
 }
 .quick-assign-role {
-  font-size: 12px;
+  font-size: 0.75rem;
   color: var(--accent);
 }
 .quick-assign-empty {
   padding: 8px;
-  font-size: 14px;
+  font-size: 0.875rem;
 }
 .quick-assign-error {
   margin: 6px 2px 2px;
-  font-size: 14px;
+  font-size: 0.875rem;
 }
 @keyframes quick-assign-in {
   from { opacity: 0; transform: translateY(-4px); }
@@ -2127,7 +2133,7 @@ a.project-card:hover {
 }
 .task-detail-header h2 {
   margin: 0;
-  font-size: 21px;
+  font-size: 1.3125rem;
   flex: 1;
 }
 .task-detail-body {
@@ -2186,7 +2192,7 @@ a.project-card:hover {
   align-items: center;
   gap: 10px;
   color: var(--text);
-  font-size: 14px;
+  font-size: 0.875rem;
   margin: 4px 0;
 }
 .auth-divider::before,
@@ -2220,7 +2226,7 @@ a.project-card:hover {
   margin-bottom: 10px;
 }
 .task-detail-hint {
-  font-size: 14px;
+  font-size: 0.875rem;
   color: var(--text);
   margin: 4px 0 0;
 }
@@ -2313,7 +2319,7 @@ a.project-card:hover {
   flex-shrink: 0;
 }
 .subtask-title {
-  font-size: 15px;
+  font-size: 0.9375rem;
   color: var(--text-h);
   overflow-wrap: anywhere;
 }
@@ -2328,7 +2334,7 @@ a.project-card:hover {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  font-size: 17px;
+  font-size: 1.0625rem;
   line-height: 1;
   flex-shrink: 0;
 }
@@ -2337,7 +2343,7 @@ a.project-card:hover {
   color: var(--accent);
 }
 .subtask-empty {
-  font-size: 14px;
+  font-size: 0.875rem;
   color: var(--text);
   margin: 10px 0 0;
 }
@@ -2349,7 +2355,7 @@ a.project-card:hover {
 }
 .subtask-confirm p {
   margin: 0 0 10px;
-  font-size: 15px;
+  font-size: 0.9375rem;
   color: var(--text-h);
 }
 .subtask-confirm-actions {
@@ -2381,13 +2387,13 @@ a.project-card:hover {
 }
 .admin-sub {
   color: var(--text);
-  font-size: 15px;
+  font-size: 0.9375rem;
 }
 .admin-section {
   margin-bottom: 36px;
 }
 .admin-section > h2 {
-  font-size: 19px;
+  font-size: 1.1875rem;
   margin-bottom: 12px;
 }
 .admin-section > .error,
@@ -2421,11 +2427,11 @@ a.project-card:hover {
   border-color: var(--accent-border);
 }
 .admin-kpi-label {
-  font-size: 14px;
+  font-size: 0.875rem;
   color: var(--text);
 }
 .admin-kpi-value {
-  font-size: 33px;
+  font-size: 2.0625rem;
   font-weight: 600;
   line-height: 1.1;
   color: var(--text-h);
@@ -2447,11 +2453,11 @@ a.project-card:hover {
 .admin-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 15px;
+  font-size: 0.9375rem;
 }
 .admin-table th {
   text-align: left;
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 500;
   color: var(--text);
   padding: 10px 16px;
@@ -2487,7 +2493,7 @@ a.project-card:hover {
 }
 .admin-you {
   margin-left: 6px;
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 400;
   color: var(--text);
 }
@@ -2505,7 +2511,7 @@ a.project-card:hover {
   border-radius: 6px;
   background: var(--bg);
   color: var(--text-h);
-  font-size: 15px;
+  font-size: 0.9375rem;
 }
 .admin-role-cell select:focus {
   outline: none;
@@ -2560,11 +2566,11 @@ a.project-card:hover {
 }
 .confirm-body h2 {
   margin: 8px 0 6px;
-  font-size: 19px;
+  font-size: 1.1875rem;
   font-weight: 600;
 }
 .confirm-message {
-  font-size: 15px;
+  font-size: 0.9375rem;
   line-height: 1.5;
   overflow-wrap: anywhere;
 }
@@ -2641,7 +2647,7 @@ a.project-card:hover {
 }
 .profile-title {
   margin: 0 0 16px;
-  font-size: 29px;
+  font-size: 1.8125rem;
 }
 .profile-card {
   background: var(--bg);
@@ -2672,13 +2678,13 @@ a.project-card:hover {
 }
 .profile-name {
   margin: 0;
-  font-size: 23px;
+  font-size: 1.4375rem;
   font-weight: 600;
   line-height: 1.25;
   overflow-wrap: anywhere;
 }
 .profile-email {
-  font-size: 15px;
+  font-size: 0.9375rem;
   overflow-wrap: anywhere;
 }
 .profile-form {
@@ -2689,7 +2695,7 @@ a.project-card:hover {
 }
 .profile-section-title {
   margin: 0;
-  font-size: 16px;
+  font-size: 1rem;
   font-weight: 600;
   color: var(--text-h);
 }
@@ -2699,7 +2705,7 @@ a.project-card:hover {
   gap: 6px;
 }
 .profile-field label {
-  font-size: 15px;
+  font-size: 0.9375rem;
   font-weight: 500;
   color: var(--text-h);
 }
@@ -2712,7 +2718,7 @@ a.project-card:hover {
   background: var(--bg);
   color: var(--text-h);
   font: inherit;
-  font-size: 16px;
+  font-size: 1rem;
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 .profile-field input:hover:not([readonly]) {
@@ -2745,7 +2751,7 @@ a.project-card:hover {
   pointer-events: none;
 }
 .profile-hint {
-  font-size: 13px;
+  font-size: 0.8125rem;
 }
 .profile-msg {
   margin: 0;
